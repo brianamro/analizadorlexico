@@ -4,22 +4,22 @@ from transition import Transition
 from transition import Epsilon
 from state import State
 
-class AFN:
-    id_State = 0
+class AFN():
+    id_AFN = 0
     def __init__(self, ini_state, end_state, transitions, states):
         if isinstance(end_state, list) and isinstance(transitions, list) and isinstance(states, list):
             self.ini_state = ini_state
             self.end_state = end_state
             self.transitions = transitions
             self.states = states
-            self.id_State = AFN.id_State
-            AFN.id_State = AFN.id_State + 1
+            self.id_AFN = AFN.id_AFN
+            AFN.id_AFN = AFN.id_AFN + 1
         else:
             print("El estado final, transiciones y estados deben ser arreglos")
             sys.exit()
     #Sobreescritura para imprimir el AFN con la funcion print
     def __str__(self):
-        Out  = "AFN: "+str(self.id_State)+"\n"
+        Out  = "AFN: "+str(self.id_AFN)+"\n"
         #Impresion de estados
         Out += "States: ["
         for state in self.states:
@@ -128,6 +128,20 @@ class AFN:
             newTransitions.append(t_optional)
         #Regresamos Nuevo Automata
         return AFN(self.ini_state, self.end_state, newTransitions, self.states)
+    
+    #Cerradura Epsilon, recibe un estado
+    def C_Epsilon(self, state):
+        if isinstance(state, State):
+            #Recorremos las transiciones del Automata
+            outStates = []
+            for trans in self.transitions:
+                if(trans.state_from == state):   #Estado inicial de la transicion igual al estado a igualar
+                    if(trans.hasEpsilon):        #La transicion tiene a epsilon
+                        outStates.append(trans.state_to)   #Agregamos el estado al que llega con dicha transicion
+            return state.unionSt(outStates)
+        else:
+            print("Se esperaba un estado")
+            sys.exit()
 
 #--------------  M  A  I  N  --------------
 AFN1 = AFN.createBasicAutomata('a')
@@ -145,3 +159,7 @@ print(AFNCon)
 AFN_OP = AFNU.optional()
 print("Opcional Union(1,2)")
 print(AFN_OP)
+CE = AFN_OP.C_Epsilon(AFN_OP.ini_state)
+print("Cerradura Epislon IniState de Automata Opcional")
+for state in CE:
+    print(state)

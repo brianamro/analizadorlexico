@@ -12,7 +12,7 @@ class Epsilon:
 # Por default, el simbolo máximo será epsilon, si se desea 
 # un rango, se especificará el simbolo máximo cuando 
 # se construya la transición
-class Transition:
+class Transition():
     #Constructor: Recibe Estado ir, estado viene, y los simbolos de la transicion
     def __init__(self, state_from, state_to, min_Symbol, max_Symbol = Epsilon.symbol ):
         if(min_Symbol <= max_Symbol):
@@ -28,14 +28,6 @@ class Transition:
         else:
             print ("El simbolo final debe ser menor al simbolo inicio")
             sys.exit()
-
-
-    #Enviar estado Inicial
-    def set_state_to(self, state):
-        self.state_to = state
-    #Enviar estado Final
-    def set_state_from(self, state):
-        self.state_from = state
     #Sobrecarga para "convertir a String"
     def __str__(self):
         Out = ""
@@ -45,6 +37,17 @@ class Transition:
         else:
             Out += self.min_Symbol
         return Out
+
+    #Enviar estado Inicial
+    def set_state_to(self, state):
+        self.state_to = state
+    #Enviar estado Final
+    def set_state_from(self, state):
+        self.state_from = state
+    #La transicion cuenta con el simbolo epsilon
+    def hasEpsilon(self):
+        return self.min_Symbol == Epsilon.symbol
+    
     
 
 
