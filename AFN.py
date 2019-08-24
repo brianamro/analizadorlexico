@@ -7,7 +7,7 @@ from state import State
 class AFN:
     id_State = 0
     def __init__(self, ini_state, end_state, transitions, states):
-        if isinstance(transitions, list):
+        if isinstance(end_state, list) and isinstance(transitions, list) and isinstance(states, list):
             self.ini_state = ini_state
             self.end_state = end_state
             self.transitions = transitions
@@ -15,72 +15,133 @@ class AFN:
             self.id_State = AFN.id_State
             AFN.id_State = AFN.id_State + 1
         else:
-            print("Las transiciones deben ser un arreglo")
+            print("El estado final, transiciones y estados deben ser arreglos")
             sys.exit()
-    
+    #Sobreescritura para imprimir el AFN con la funcion print
     def __str__(self):
-        Out  = "\nAFN: "+str(self.id_State)+"\n"
-        Out  += "Ini: "+str(self.ini_state)+"\n"
+        Out  = "AFN: "+str(self.id_State)+"\n"
+        #Impresion de estados
+        Out += "States: ["
+        for state in self.states:
+            Out += str(state)+","
+        Out += "]\n"
+        Out += "Ini: "+str(self.ini_state)+"\n"
+        #Imprimir Transiciones
         for trans in self.transitions:
             Out += str(trans)+"\n"
-        Out += "Acc: "+str(self.end_state)
+        #Imprimir estados de Aceptacion
+        Out += "Acc: ["
+        for state in self.end_state:
+            Out += str(state)+","
+        Out += "]\n"
         return Out
-    def
-    
+    #Agregar un array de estados al AFN
+    def addStates(states):
+        if isinstance(states, list):
+            newStates = []
+            for state in states:
+                self.states.append(state)
+        else:
+            print("Solo se recibe array de estados")
+            sys.exit()
+    #Poner en falso los estados de aceptacion de un autoamta
+    def deleteStatesAccept(self):
+        newStates = []
+        for state in self.end_state:
+            state.accept = False
+            #  = state.deleteAccept()
+            newStates.append(state)
+        self.end_state = newStates
+    #Creacion de un automata basico con un solo caracter
     def createBasicAutomata(car):
         iniSt = State()
         endSt = State(True)
         trans = Transition(iniSt, endSt, car)
-        basicAFN = AFN(iniSt, endSt, [trans])
+        basicAFN = AFN(iniSt, [endSt], [trans], [iniSt, endSt])
         return basicAFN
     
     def union(self, AFN2):
         iniSt = State()
         endSt = State(True)
         #Borramos el estado de aceptacion de los AFN
-        self.end_state.deleteAccept()   
-        AFN2.end_state.deleteAccept()   
-        #Creamos las nuevas Trancisiones
+        self.deleteStatesAccept()   
+        AFN2.deleteStatesAccept()   
+        #Creamos las nuevas Trancisiones Iniciales
         t1_i = Transition(iniSt, self.ini_state, Epsilon.symbol)
-        t1_e = Transition(self.end_state, endSt, Epsilon.symbol)
         t2_i = Transition(iniSt, AFN2.ini_state, Epsilon.symbol)
-        t2_e = Transition(AFN2.end_state, endSt, Epsilon.symbol)
-        #Agregamos todas las transiciones
-        allTrans = [t1_i,t1_e, t2_i, t2_e]
+        allTrans = [t1_i, t2_i]
+        #Creamos Transiciones de estados finales
+        for state in self.end_state:    #Primer Automata
+            tx = Transition(state, endSt, Epsilon.symbol)
+            allTrans.append(tx)     #Insertar Nuevas Transiciones
+        for state in AFN2.end_state:    #Segundo Automata
+            tx = Transition(state, endSt, Epsilon.symbol)
+            allTrans.append(tx)     
+        #Insertamos las transiciones de cada uno de los Automatas
         for trans in self.transitions:
             allTrans.append(trans)
         for trans in AFN2.transitions:
             allTrans.append(trans)
-
-        newAFN = AFN(iniSt, endSt, allTrans)
+        #Agregamos los nuevos estados
+        newStates = [iniSt, endSt]
+        for state in self.states:
+            newStates.append(state)
+        for state in AFN2.states:
+            newStates.append(state)
+        #Creacion del nuevo AFN con la quitupla
+        newAFN = AFN(iniSt, [endSt], allTrans, newStates)
         return newAFN
     
     def concatenate(self, AFN2):
-        #Nuevos estados final e inicial
-        iniSt = State()
-        endSt = State()
         #Borramos estados de aceptacion
-        self.end_state.deleteAccept()
-        AFN2.end_state.deleteAccept()
+        self.deleteStatesAccept()
         #Nuevas transiciones
-        tini = Transition(iniSt, self.ini_state, Epsilon.symbol)
-        tinter = Transition(self.end_state, AFN2.ini_state, Epsilon.symbol)
-        tend = Transition(AFN2.end_state, endSt, Epsilon.symbol)
-        #Juntamos todas las transiciones para el nuevo atomata
-        allTrans = [tini, tinter, tend]
-        for trans in self.transitions:
-            allTrans.append(trans)
-        for trans in AFN2.transitions:
-            allTrans.append(trans)
-
-        newAFN = AFN(iniSt, endSt, allTrans)
+        allTrans = []
+        #Creamos Transiciones del estado de aceptacion del AFN1 al inicial del AFN2
+        #Transiciones intermedias
+        for state in self.end_state:    #Primer Automata
+            t_inter = Transition(state, AFN2.ini_state, Epsilon.symbol)
+            allTrans.append(t_inter)     #Insertar Nuevas Transiciones
+        #Transiciones existentes
+        for transition in self.transitions:  #Primer Automata
+            allTrans.append(transition)    
+        for transition in AFN2.transitions:  #Segundo Automata
+            allTrans.append(transition)    
+        #Juntar todos los estados de cada uno de los automatas
+        newStates = []
+        #Primer AFN
+        for state in self.states:
+            newStates.append(state)
+        #Sefundo auotamta
+        for state in AFN2.states:
+            newStates.append(state)
+        #Creacion del automata
+        newAFN = AFN(self.ini_state, AFN2.end_state, allTrans, newStates)
         return newAFN
+    
+    #Opcional "?"
+    def optional(self):
+        newTransitions = self.transitions   #Transiciones ya exisitentes
+        #Nuevas Transiciones del estado inicial al conjunto de estados finales
+        for state in self.end_state:
+            t_optional = Transition(self.ini_state, state, Epsilon.symbol)
+            newTransitions.append(t_optional)
+        #Regresamos Nuevo Automata
+        return AFN(self.ini_state, self.end_state, newTransitions, self.states)
 
+#--------------  M  A  I  N  --------------
 AFN1 = AFN.createBasicAutomata('a')
+print ("Basico 1:\n")
 print(AFN1)
 AFN2 = AFN.createBasicAutomata('b')
+print ("Basico 2:\n")
 print(AFN2)
 AFNU = AFN1.union(AFN2)
+print("Union (1,2)")
 print(AFNU)
 AFNCon = AFN1.concatenate(AFN2)
+print("Concatenar (1,2)")
 print(AFNCon)
+AFN_OP = AFNU.optional()
+print("Opcional Union(1,2)")
+print(AFN_OP)

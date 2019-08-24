@@ -8,8 +8,8 @@ class State:
     #el valor por defecto es que no es estado de aceptación
     def __init__(self, value=False):
         self.accept = value
-        self.id_state = state.id_state
-        state.id_state = state.id_state+1
+        self.id_state = State.id_state
+        State.id_state = State.id_state+1
     #Sobrecargamos el método de imprimir para poder
     #acceder al valor del id de algún estado más fácilmente
     def __str__(self):

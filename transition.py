@@ -1,11 +1,11 @@
 import sys
 
-from state import state
+from state import State
 
 
 # Definimos el simbolo estático epsilon
 class Epsilon:
-    symbol = ""
+    symbol = "Epsilon"
 # En la clase transición tendremos que definir el estado 
 # hacia donde se va, el estadoinicial, un simbolo minimo 
 # y un máximo (si es que es un rango).
