@@ -2,7 +2,7 @@
 #estado de aceptación y se le asigna un id. El id
 #cada que se crea un estado incrementa el id para  
 #que no haya dos estados con un mismo id
-class state:
+class State:
     id_state = 0
     #constructor: recibe si es estado de aceptación
     #el valor por defecto es que no es estado de aceptación
@@ -13,10 +13,14 @@ class state:
     #Sobrecargamos el método de imprimir para poder
     #acceder al valor del id de algún estado más fácilmente
     def __str__(self):
-        stateAux = "id.state: "+str(self.id_state)
-        return stateAux
+        return str(self.id_state)
+    def isAccept(self):
+        return self.accept
+    #El atributo de aceptacion pasa a ser Falso
+    def deleteAccept(self):
+        self.accept = False
 
-    #Ejemplo de como instanciar un estado
+#Ejemplo de como instanciar un estado
 # edo1 = state()
 # edo2 = state(True)
 # edo3 = state(False)
