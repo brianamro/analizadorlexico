@@ -23,13 +23,19 @@ class State():
     #El atributo de aceptacion pasa a ser Falso
     def deleteAccept(self):
         self.accept = False
-    #Union de dos conjuntos de estados
-    def unionSt(self,states2):  #states1  y states2 deben ser arreglos
+    #Union de de este mismo estado, con u un conjunto de estados
+    def unionSt(self,states2):  #states 2 debe ser un conjunto de estados
         if isinstance(states2, list):
             newStates = [self]
             for state in states2:
-                newStates.append(state)
-            return newStates
+                newStates.append(state) #Agregar los nuevos estados
+            #Quitar elementos repetidos del arreglo
+            outArrayStates = []
+            for i in newStates:
+                if i not in outArrayStates:
+                    outArrayStates.append(i)
+            #Regresamos un cojunto de estados sin repetir
+            return outArrayStates
         else:
             print("Error en los argumentos")
             sys.exit()
