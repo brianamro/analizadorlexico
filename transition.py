@@ -48,16 +48,21 @@ class Transition():
     def hasEpsilon(self):
         return self.min_Symbol == Epsilon.symbol
     def range(self):
-        if self.min_Symbol != Epsilon.symbol and self.max_Symbol != self.min_Symbol:
+        if self.min_Symbol == Epsilon.symbol:
+            return [self.min_Symbol]
+        else: #self.max_Symbol == Epsilon.symbol:
             i = ord(self.min_Symbol)
             j = ord(self.max_Symbol)
+            #print(i)
+            # if i == j: 
+            #     return [i]
+            # # cad = "Hola putito"
+            # else:
             arreglo = []
-            for i in range(j):
+            for k in range(i,j+1):
                 # print("I:",i)
-                arreglo.append(chr(i))
-            return arreglo
-        elif self.max_Symbol == Epsilon.symbol:
-            return [self.min_Symbol]    
+                arreglo.append(chr(k))
+            return arreglo       
     
 
     # Ejemplo de como instanciar una transición
