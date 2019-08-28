@@ -160,8 +160,22 @@ class AFN():
                 for trans in self.transitions:
                     if caracter in trans.range() and trans.state_from == estado:
                         #print(trans.state_to)
-                        conjunto.append(trans.state_to.id_state)
+                        conjunto.append(trans.state_to)
                         return conjunto
+
+    
+    # La función Go_TO (ir_A) obtiene la cerradura epsilon
+    # de cada estado obtenido por la función mover
+    
+    def Go_to(self, states):
+        conjunto = []
+        for state in states
+            cerradura = self.C_Epsilon(state)
+            conjunto = state.unionSt(cerradura)
+        return conjunto
+
+
+
 
 
 #--------------  M  A  I  N  --------------
