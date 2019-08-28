@@ -47,6 +47,8 @@ class Transition():
     #La transicion cuenta con el simbolo epsilon
     def hasEpsilon(self):
         return self.min_Symbol == Epsilon.symbol
+    # La función rango retorna un arreglo con todos
+    # los simbolos que pertenecen a la transición
     def range(self):
         if self.min_Symbol == Epsilon.symbol:
             return [self.min_Symbol]
