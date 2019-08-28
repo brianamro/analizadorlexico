@@ -129,7 +129,7 @@ class AFN():
         return AFN(self.ini_state, self.end_state, newTransitions, self.states)
     
     #Cerradura Epsilon, recibe un estado
-    def C_Epsilon(self, state):
+    def C_Epsilon_state(self, state):
         if isinstance(state, State):
             #Recorremos las transiciones del Automata
             outStates = []
@@ -137,56 +137,64 @@ class AFN():
                 if(trans.state_from == state):   #Estado inicial de la transicion igual al estado a igualar
                     if(trans.hasEpsilon):        #La transicion tiene a epsilon
                         outStates.append(trans.state_to)   #Agregamos el estado al que llega con dicha transicion
+            #Regresa un areglo de estados
             return state.unionSt(outStates)
         else:
             print("Se esperaba un estado")
             sys.exit()
-    # La funcion mover estado recibe un conjunto de estados y un caracter
-    # y regresa un conjunto de estados. Esta funcion es util en el analisis
-    # de cadenas.
-    def move_state(self, states, caracter):
-        conjunto = []
-        # Recorremos todos los estados y les sacamos la cerradura
-        # epsilon para checar si tiene alguna transicón con el caracter 
-        # que recibe la función
+    def C_Epsilon(self, states):
+        arrayStates = []
         for state in states:
-            #print("sacando cerradura epsilon de: ",state)
-            cerradura = self.C_Epsilon(state)
-            # Recorremos cada estado de la cerradura y checamos
-            # si existe alguna transición con ese estado y con ese simbolo
-            # y lo agregamos al conjunto
-            for estado in cerradura:
-                #print(estado.id_state)
-                for trans in self.transitions:
-                    if caracter in trans.range() and trans.state_from == estado:
-                        #print(trans.state_to)
-                        conjunto.append(trans.state_to)
-                        return conjunto
+            arrayStates = arrayStates + self.C_Epsilon_state(state)
+        #Quitar elementos repetidos del arreglo
+        outArrayStates = []
+        for i in arrayStates:
+            if i not in outArrayStates:
+                outArrayStates.append(i)
+        return outArrayStates    
 
+    def move_state(self, state, caracter):
+        arrayStates = []
+        #Recorrer todas las transiciones
+        for trans in self.transitions:
+            if caracter in trans.range():
+                arrayStates.append(trans.state_to)
+        #Quitar elementos repetidos del arreglo
+        outArrayStates = []
+        for i in arrayStates:
+            if i not in outArrayStates:
+                outArrayStates.append(i)
+        return outArrayStates
+
+
+    def move_arrayStates(self, states, caracter):
+        arrayStates = []
+        for state in states:
+            arrayStates = arrayStates + self.move_state(state,caracter)
+        #Quitar elementos repetidos del arreglo
+        outArrayStates = []
+        for i in arrayStates:
+            if i not in outArrayStates:
+                outArrayStates.append(i)
+        return outArrayStates
     
-    # La función Go_TO (ir_A) obtiene la cerradura epsilon
-    # de cada estado obtenido por la función mover
-
-    def Go_to(self, states):
-        conjunto = []
-        for state in states:
-            cerradura = self.C_Epsilon(state)
-            conjunto = state.unionSt(cerradura)
-        return conjunto
-
-
-
-
+    def go_to(self, states, caracter=False):
+        if caracter or caracter != "":
+            arrayMove = self.move_arrayStates(states,caracter)
+            return self.C_Epsilon(arrayMove)
 
 #--------------  M  A  I  N  --------------
 AFN1 = AFN.createBasicAutomata('a')
 print ("Basico 1:\n")
 print(AFN1)
 AFN2 = AFN.createBasicAutomata('b')
+AFN3 = AFN.createBasicAutomata('a')
 print ("Basico 2:\n")
 print(AFN2)
 AFNU = AFN1.union(AFN2)
 print("Union (1,2)")
+AFNSuperU = AFNU.union(AFN3)
+AFNSuperU = AFNSuperU.optional()
 print(AFNU)
 AFNCon = AFN1.concatenate(AFN2)
 print("Concatenar (1,2)")
@@ -198,7 +206,13 @@ print(AFN_OP)
 # print("Cerradura Epislon IniState de Automata Opcional")
 # for state in CE:
 #     print(state)
-conjunto = AFN_OP.C_Epsilon(AFN_OP.ini_state)
-print(AFN_OP.move_state(conjunto, 'a'))
+#conjunto = AFN_OP.C_Epsilon()
+#
+#conjunto2=AFN_OP.move_arrayStates(conjunto, 'a')
+
+conjunto3 = AFNSuperU.go_to([AFNSuperU.ini_state], 'b')
+
+for i in conjunto3:
+    print(i)
 
 
