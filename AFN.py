@@ -141,10 +141,27 @@ class AFN():
         else:
             print("Se esperaba un estado")
             sys.exit()
-    def move_state(self, state, caracter):
-        for trans in self.transitions:
-            print(trans.range())
-            
+    # La funcion mover estado recibe un conjunto de estados y un caracter
+    # y regresa un conjunto de estados. Esta funcion es util en el analisis
+    # de cadenas.
+    def move_state(self, states, caracter):
+        conjunto = []
+        # Recorremos todos los estados y les sacamos la cerradura
+        # epsilon para checar si tiene alguna transicón con el caracter 
+        # que recibe la función
+        for state in states:
+            #print("sacando cerradura epsilon de: ",state)
+            cerradura = self.C_Epsilon(state)
+            # Recorremos cada estado de la cerradura y checamos
+            # si existe alguna transición con ese estado y con ese simbolo
+            # y lo agregamos al conjunto
+            for estado in cerradura:
+                #print(estado.id_state)
+                for trans in self.transitions:
+                    if caracter in trans.range() and trans.state_from == estado:
+                        #print(trans.state_to)
+                        conjunto.append(trans.state_to.id_state)
+                        return conjunto
 
 
 #--------------  M  A  I  N  --------------
@@ -167,5 +184,7 @@ print(AFN_OP)
 # print("Cerradura Epislon IniState de Automata Opcional")
 # for state in CE:
 #     print(state)
+conjunto = AFN_OP.C_Epsilon(AFN_OP.ini_state)
+print(AFN_OP.move_state(conjunto, 'a'))
 
-AFN_OP.move_state(AFN_OP.ini_state, 'A')
+
