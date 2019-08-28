@@ -25,20 +25,19 @@ class AFN():
         for state in self.states:
             Out += str(state)+","
         Out += "]\n"
-        Out += "Ini: "+str(self.ini_state)+"\n"
+        Out += "Inicial: "+str(self.ini_state)+"\n"
         #Imprimir Transiciones
         for trans in self.transitions:
             Out += str(trans)+"\n"
         #Imprimir estados de Aceptacion
-        Out += "Acc: ["
+        Out += "Acceptacion: ["
         for state in self.end_state:
             Out += str(state)+","
         Out += "]\n"
         return Out
     #Agregar un array de estados al AFN
-    def addStates(states):
+    def addStates(self, states):
         if isinstance(states, list):
-            newStates = []
             for state in states:
                 self.states.append(state)
         else:
@@ -142,6 +141,11 @@ class AFN():
         else:
             print("Se esperaba un estado")
             sys.exit()
+    def move_state(self, state, caracter):
+        for trans in self.transitions:
+            print(trans.range())
+            
+
 
 #--------------  M  A  I  N  --------------
 AFN1 = AFN.createBasicAutomata('a')
@@ -159,7 +163,9 @@ print(AFNCon)
 AFN_OP = AFNU.optional()
 print("Opcional Union(1,2)")
 print(AFN_OP)
-CE = AFN_OP.C_Epsilon(AFN_OP.ini_state)
-print("Cerradura Epislon IniState de Automata Opcional")
-for state in CE:
-    print(state)
+# CE = AFN_OP.C_Epsilon(AFN_OP.ini_state)
+# print("Cerradura Epislon IniState de Automata Opcional")
+# for state in CE:
+#     print(state)
+
+AFN_OP.move_state(AFN_OP.ini_state, 'A')
