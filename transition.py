@@ -47,9 +47,18 @@ class Transition():
     #La transicion cuenta con el simbolo epsilon
     def hasEpsilon(self):
         return self.min_Symbol == Epsilon.symbol
+    def range(self):
+        if self.min_Symbol != Epsilon.symbol and self.max_Symbol != self.min_Symbol:
+            i = ord(self.min_Symbol)
+            j = ord(self.max_Symbol)
+            arreglo = []
+            for i in range(j):
+                # print("I:",i)
+                arreglo.append(chr(i))
+            return arreglo
+        elif self.max_Symbol == Epsilon.symbol:
+            return [self.min_Symbol]    
     
-    
-
 
     # Ejemplo de como instanciar una transición
 # edoIni = state()
