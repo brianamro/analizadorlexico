@@ -142,6 +142,8 @@ class AFN():
         else:
             print("Se esperaba un estado")
             sys.exit()
+    # Esta función calcula la cerradura epsilon de un conjunto de estados
+    # a partir de la funcion c_epsilon_sate
     def C_Epsilon(self, states):
         arrayStates = []
         for state in states:
@@ -152,6 +154,8 @@ class AFN():
             if i not in outArrayStates:
                 outArrayStates.append(i)
         return outArrayStates    
+    # Esta función calcula los estados a donde se puede mover
+    # a partir de un estado y un caracter
 
     def move_state(self, state, caracter):
         arrayStates = []
@@ -166,7 +170,10 @@ class AFN():
                 outArrayStates.append(i)
         return outArrayStates
 
-
+    # Esta funcion calcula el conjunto de estados
+    # a donde se puede mover a partir de un caracter
+    # regresa un conjunto de estados y recibe un 
+    # conjunto de estados y un caracter
     def move_arrayStates(self, states, caracter):
         arrayStates = []
         for state in states:
@@ -177,6 +184,8 @@ class AFN():
             if i not in outArrayStates:
                 outArrayStates.append(i)
         return outArrayStates
+    # Go to regresa la cerradura epsilon de los estados
+    # obtenidos a partir de la función move_arrayStates (mover a)
     
     def go_to(self, states, caracter=False):
         if caracter or caracter != "":
