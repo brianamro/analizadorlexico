@@ -1,6 +1,7 @@
 import sys
 
 from state import State
+from alphabet import Alphabet
 
 
 # Definimos el simbolo estático epsilon
@@ -14,17 +15,28 @@ class Epsilon:
 # se construya la transición
 class Transition():
     #Constructor: Recibe Estado ir, estado viene, y los simbolos de la transicion
+    
     def __init__(self, state_from, state_to, min_Symbol, max_Symbol = Epsilon.symbol ):
-        if(min_Symbol <= max_Symbol):
-            self.state_from = state_from
-            self.state_to = state_to
-            self.min_Symbol = min_Symbol
-            self.max_Symbol = max_Symbol
-        elif(max_Symbol == Epsilon.symbol):
-            self.state_from = state_from
-            self.state_to = state_to
+        self.state_from = state_from
+        self.state_to = state_to
+        self.min_Symbol = Epsilon.symbol
+        self.max_Symbol = Epsilon.symbol
+        #Rangos conocidos
+        if min_Symbol == 'a' and max_Symbol == 'z':
+            self.min_Symbol = Alphabet.range_min
+            self.max_Symbol = Alphabet.range_min
+        elif min_Symbol == 'A' and max_Symbol == 'Z':
+            self.min_Symbol = Alphabet.range_may
+            self.max_Symbol = Alphabet.range_may
+        elif min_Symbol == '0' and max_Symbol == '9':
+            self.min_Symbol = Alphabet.range_num
+            self.max_Symbol = Alphabet.range_num
+        elif max_Symbol == Epsilon.symbol:
             self.min_Symbol = min_Symbol
             self.max_Symbol = min_Symbol
+        elif min_Symbol != max_Symbol:
+            self.min_Symbol = min_Symbol
+            self.max_Symbol = max_Symbol
         else:
             print ("El simbolo final debe ser menor al simbolo inicio")
             sys.exit()
