@@ -52,6 +52,13 @@ class AFN():
         trans = Transition(iniSt, endSt, car)
         basicAFN = AFN(iniSt, endSt, [trans], [iniSt, endSt])
         return basicAFN
+
+    def createRangeAutomata(carIni, carFin):
+        iniSt = State()
+        endSt = State(True)
+        trans = Transition(iniSt, endSt, carIni, carFin)
+        rangeAFN = AFN(iniSt, endSt, [trans], [iniSt, endSt])
+        return rangeAFN
     #Union del objetos de auntomota con otro autoamta
     #Sobreescribe el automata SELF
     def union(self, AFN2):
@@ -223,6 +230,23 @@ class AFN():
         else:
             print("Se esperaba un estado")
             sys.exit()
+
+    # Este metodo obtiene el alfabeto de un AFN
+    def get_alpahbet(self):
+        # En el arreglo llamado aux guardaremos todos los caracteres
+        # de todas las transiciones
+        aux = []
+        for trans in self.transitions:
+            for car in trans.range():
+                aux.append(car)
+        # Eliminamos los caracteres repetidos
+        alfabeto = []
+        for car in aux:
+            if car not in alfabeto:
+                alfabeto.append(car)
+        return alfabeto
+            
+
     # Esta función calcula la cerradura epsilon de un conjunto de estados
     # a partir de la funcion c_epsilon_sate
     def C_Epsilon(self, states):
@@ -242,7 +266,7 @@ class AFN():
         arrayStates = []
         #Recorrer todas las transiciones
         for trans in self.transitions:
-            if caracter in trans.range():
+            if caracter in trans.range() and state==trans.state_from:
                 arrayStates.append(trans.state_to)
         #Quitar elementos repetidos del arreglo
         outArrayStates = []
@@ -273,53 +297,103 @@ class AFN():
             arrayMove = self.move_arrayStates(states,caracter)
             return self.C_Epsilon(arrayMove)
 
-#--------------  M  A  I  N  --------------
-#Ejemplos para aplicar metodos sobre auomatas
-AFN1 = AFN.createBasicAutomata('a')
-print ("\nBasico 1:")
-print(AFN1)
-AFN2 = AFN.createBasicAutomata('b')
-print ("\nBasico 2:")
-print(AFN2)
-AFN3 = AFN.createBasicAutomata('c')
-print ("\nBasico 3:")
-print(AFN3)
-AFN4 = AFN.createBasicAutomata('d')
-print ("\nBasico 3:")
-print(AFN4)
-#Union
-print("Union Basico 1 y Basico 2")
-AFN1.union(AFN2)
-print(AFN1)
-#Concatenar
-print("Concatenar Basico 3 y Basico 4")
-AFN3.concatenate(AFN4)
-print(AFN3)
-#Opcional
-AFN5 = AFN.createBasicAutomata('e')
-print("Basico 5:")
-print(AFN5)
-AFN5.optional()
-print("Opcional")
-print(AFN5)
-# #Cerradura+
-AFN6 = AFN.createBasicAutomata('f')
-print("Basico 6:")
-print(AFN6)
-AFN6.kleene_plus()
-print("Cerradura+")
-print(AFN6)
-#Cerradura*
-AFN7 = AFN.createBasicAutomata('a')
-print("Basico 6:")
-print(AFN7)
-AFN7.kleene_star()
-print("Cerradura*")
-print(AFN7)
+# La función convert_to_afd recibe un automata con transiciones 
+    # epsilon y devuelve un nuevo automata pero de la forma
+    # determinista
+    def convert_to_afd(self): 
+        c_e_ini = []
+        
+        #Calcular cerradura epislon con el estado inicial
+        c_e_ini = self.C_Epsilon_state(self.ini_state)
+        alfabeto = self.get_alpahbet()      #Regresa arreglo de caracteres
+        alfabeto.remove(Epsilon.symbol)
+        nuevos_PseaudoEstados = []
 
-# conjunto = AFN1.go_to([AFN1.ini_state], 'b')
+        # Hacer estados iniciales con la cerradura epislon del esatdo inicial, y los caracteres del alfabeto
+        for car in alfabeto:
+            arrayEstadosTemp = self.go_to(c_e_ini, car)
+            nuevos_PseaudoEstados.append(arrayEstadosTemp)
+        
+        apunt = 0                           
+        indexUlitmoItem = len(nuevos_PseaudoEstados)-1
+        
+        while apunt < indexUlitmoItem:
+            #Recorrer alfabeto
+            for caracter in alfabeto:
+                arrayAuxEstados = self.go_to(nuevos_PseaudoEstados[apunt], caracter)
+                if State.arrayIsMatrix(arrayAuxEstados, nuevos_PseaudoEstados):
+                # if arrayAuxEstados not in nuevos_PseaudoEstados:
+                    nuevos_PseaudoEstados.append(arrayAuxEstados)
+            apunt = apunt + 1
+            indexUlitmoItem = len(nuevos_PseaudoEstados)-1
+        #Agregar Estado Inicial
+        nuevos_PseaudoEstados.append(c_e_ini)
 
-# for i in conjunto:
-#     print(i)
+        print("PseudoEstados")
+        print(nuevos_PseaudoEstados)
 
 
+        # prueba =[]
+        # prueba
+        # for simbolo in alfabeto:
+        #     estado_aux+=self.go_to(c_e_ini,simbolo)
+        # B = self.go_to(c_e_ini,alfabeto[0])
+        # C = self.go_to(c_e_ini, alfabeto[1])
+        # D = self.go_to(B,alfabeto[0])
+        # arreglo_estados_nuevos =[]
+        # arreglo_estados_nuevos.append(B)
+        # arreglo_estados_nuevos.append(C)
+        return nuevos_PseaudoEstados
+    
+def main():
+    #--------------  M  A  I  N  --------------
+    #     #Concatenar
+    # print("Concatenar Basico 3 y Basico 4")
+    # AFN3.concatenate(AFN4)
+    # print(AFN3)
+    # #Opcional
+    # AFN5 = AFN.createBasicAutomata('e')
+    # print("Basico 5:")
+    # print(AFN5)
+    # AFN5.optional()
+    # print("Opcional")
+    # print(AFN5)
+    # # #Cerradura+
+    # AFN6 = AFN.createBasicAutomata('f')
+    # print("Basico 6:")
+    # print(AFN6)
+    # AFN6.kleene_plus()
+    # print("Cerradura+")
+    # print(AFN6)
+    # #Cerradura*
+    # AFN7 = AFN.createBasicAutomata('a')
+    # print("Basico 6:")
+    # print(AFN7)
+    # AFN7.kleene_star()
+    # print("Cerradura*")
+    # print(AFN7)
+    # c_e = AFN1.convert_to_afd()
+    # for state in c_e:
+    #     print(state)
+    # afd = AFN1.convert_to_afd()
+    # for state in afd:
+    #     for st in state:
+    #         print(st, end='')
+    #         print(" ", end='')
+        # print()
+    # conjunto = AFN1.go_to([AFN1.ini_state], 'b')
+
+    # for i in conjunto:
+    #     print(i)
+
+#Crear automata (+|-)?&[0-9]+&.&[0-9]+
+
+
+
+
+
+
+
+
+if __name__ == '__main__':
+    main()  

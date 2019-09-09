@@ -17,6 +17,9 @@ class State():
     #Sobrecarga del operador "==" para comprar si dos estados son iguales
     def __eq__(self, other):
         return self.id_state == other.id_state
+    #Sobrecarga del operador "<" para comparar dos estados
+    def __lt__(self, other):
+        return self.id_state < other.id_state
     #Retornar si es un estado de aceptacion
     def isAccept(self):
         return self.accept
@@ -40,8 +43,64 @@ class State():
             print("Error en los argumentos")
             sys.exit()
 
+    #Metodo para organizar un conjunto de estados de acuerdo con su ID
+    # empieza por el indice mas pequeño, y termina en el mas grande
+    def sortStates(arr):
+        if len(arr) >1: 
+            mid = len(arr)//2 #Finding the mid of the array 
+            L = arr[:mid] # Dividing the array elements  
+            R = arr[mid:] # into 2 halves 
+    
+            State.sortStates(L) # Sorting the first half 
+            State.sortStates(R) # Sorting the second half 
+    
+            i = j = k = 0
+
+            # Copy data to temp arrays L[] and R[] 
+            while i < len(L) and j < len(R): 
+                if L[i] < R[j]: 
+                    arr[k] = L[i] 
+                    i+=1
+                else: 
+                    arr[k] = R[j] 
+                    j+=1
+                k+=1
+
+            # Checking if any element was left 
+            while i < len(L): 
+                arr[k] = L[i] 
+                i+=1
+                k+=1
+
+            while j < len(R): 
+                arr[k] = R[j] 
+                j+=1
+                k+=1
+
+    #Metodo para comparar si un arreglo de estados se encuentra
+    # en un arreglo de arreglos de estados
+    def arrayIsMatrix(arraySts, matrix):
+        #Organizamos el arreglo
+        State.sortStates(arraySts)
+        cont = 0
+        for arrayAux in matrix:
+            #Organizamos el conjunto de estados de la matriz de estados
+            if len(arraySts) == len(arrayAux):
+                State.sortStates(arrayAux)
+                
+                j = 0
+                cont = 0
+                for state in arraySts:
+                    if state == arrayAux[j]:
+                        cont = cont + 1
+                    j = j + 1
+
+                if cont == len(arraySts):
+                    return True
+        
+        return False
+
 #Ejemplo de como instanciar un estado
-# edo1 = state()
 # edo2 = state(True)
 # edo3 = state(False)
 
