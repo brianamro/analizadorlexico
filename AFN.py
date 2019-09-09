@@ -237,13 +237,14 @@ class AFN():
         # de todas las transiciones
         aux = []
         for trans in self.transitions:
-            for car in trans.range():
-                aux.append(car)
+            # for car in trans.range():
+            aux.append(trans.min_Symbol)
         # Eliminamos los caracteres repetidos
         alfabeto = []
-        for car in aux:
-            if car not in alfabeto:
-                alfabeto.append(car)
+        for elem in aux:
+            if elem not in alfabeto:
+                alfabeto.append(elem)
+        alfabeto.remove(Epsilon.symbol)
         return alfabeto
             
 
@@ -266,7 +267,8 @@ class AFN():
         arrayStates = []
         #Recorrer todas las transiciones
         for trans in self.transitions:
-            if caracter in trans.range() and state==trans.state_from:
+            # if caracter in trans.range() and state==trans.state_from:
+            if caracter == trans.min_Symbol and state == trans.state_from:
                 arrayStates.append(trans.state_to)
         #Quitar elementos repetidos del arreglo
         outArrayStates = []
@@ -302,48 +304,54 @@ class AFN():
     # determinista
     def convert_to_afd(self): 
         c_e_ini = []
+        matrixFinal = []
+        contStates = 1
         
         #Calcular cerradura epislon con el estado inicial
         c_e_ini = self.C_Epsilon_state(self.ini_state)
         alfabeto = self.get_alpahbet()      #Regresa arreglo de caracteres
-        alfabeto.remove(Epsilon.symbol)
         nuevos_PseaudoEstados = []
 
-        # Hacer estados iniciales con la cerradura epislon del esatdo inicial, y los caracteres del alfabeto
-        for car in alfabeto:
-            arrayEstadosTemp = self.go_to(c_e_ini, car)
-            nuevos_PseaudoEstados.append(arrayEstadosTemp)
+        # Hacer estados iniciales con la cerradura epislon del estado inicial, y los caracteres del alfabeto
+        print("Alfabeto: ", alfabeto)
+        print("Cerradura Inicial")
+        for elem in alfabeto:
+            arrayEstadosTemp = self.go_to(c_e_ini, elem)
+            stateTo = 0
+            if len(arrayEstadosTemp) > 0:   #Verificamos que devuelva un conjunto NO vacio
+                nuevos_PseaudoEstados.append(arrayEstadosTemp)
+                stateTo = len(nuevos_PseaudoEstados) - 1        #Indice de los nuevos PseudoEstados
+            else:
+                stateTo = -1
+            #Insertar en la matriz
+            matrixFinal.append([contStates, elem, stateTo])     #Transcion => IniState, Caracter, FinEstado
         
-        apunt = 0                           
+        #Pila                  
         indexUlitmoItem = len(nuevos_PseaudoEstados)-1
-        
-        while apunt < indexUlitmoItem:
+        print(matrixFinal)
+        print("Despues de Cerradura Inicial")
+        while contStates < indexUlitmoItem:
             #Recorrer alfabeto
-            for caracter in alfabeto:
-                arrayAuxEstados = self.go_to(nuevos_PseaudoEstados[apunt], caracter)
-                if State.arrayIsMatrix(arrayAuxEstados, nuevos_PseaudoEstados):
-                # if arrayAuxEstados not in nuevos_PseaudoEstados:
-                    nuevos_PseaudoEstados.append(arrayAuxEstados)
-            apunt = apunt + 1
+            for elem in alfabeto:
+                arrayAuxEstados = self.go_to(nuevos_PseaudoEstados[contStates], elem)
+                stateTo = 0
+                if len(arrayEstadosTemp) > 0:   #Conjunto de Estados NO Vacios
+                    if State.arrayIsMatrix(arrayAuxEstados, nuevos_PseaudoEstados):       #  Verficiamos si no se ha insertado con anteriordad
+                        nuevos_PseaudoEstados.append(arrayEstadosTemp)
+                        stateTo = len(nuevos_PseaudoEstados) - 1        #Indice de los nuevos PseudoEstados
+                else:
+                    stateTo = -1
+                #Insertamos en la matriz Final
+                matrixFinal.append([contStates, elem, stateTo])
+
+            contStates = contStates + 1
             indexUlitmoItem = len(nuevos_PseaudoEstados)-1
+
         #Agregar Estado Inicial
         nuevos_PseaudoEstados.append(c_e_ini)
-
-        print("PseudoEstados")
-        print(nuevos_PseaudoEstados)
-
-
-        # prueba =[]
-        # prueba
-        # for simbolo in alfabeto:
-        #     estado_aux+=self.go_to(c_e_ini,simbolo)
-        # B = self.go_to(c_e_ini,alfabeto[0])
-        # C = self.go_to(c_e_ini, alfabeto[1])
-        # D = self.go_to(B,alfabeto[0])
-        # arreglo_estados_nuevos =[]
-        # arreglo_estados_nuevos.append(B)
-        # arreglo_estados_nuevos.append(C)
-        return nuevos_PseaudoEstados
+        print(matrixFinal)
+        print("FIN")
+        return matrixFinal
     
 def main():
     #--------------  M  A  I  N  --------------
@@ -386,10 +394,45 @@ def main():
     # for i in conjunto:
     #     print(i)
 
-#Crear automata (+|-)?&[0-9]+&.&[0-9]+
+    #Crear automata (+|-)?&[0-9]+&.&[0-9]+
+    AFN1_main = AFN.createBasicAutomata('+')
+    AFN1_men = AFN.createBasicAutomata('-')
+    AFN1_nrA = AFN.createBasicAutomata('d')
+    AFN1_poi = AFN.createBasicAutomata('.')
+    AFN1_nrB = AFN.createBasicAutomata('d')
 
+    AFN1_main.union(AFN1_men)   #(+|-)    
+    AFN1_main.optional()        #(+|-)?
+    AFN1_nrA.kleene_plus()      #[0-9]+
+    AFN1_nrB.kleene_plus()      #[0-9]+
+    AFN1_main.concatenate(AFN1_nrA)     #(+|-)?&[0-9]+
+    AFN1_main.concatenate(AFN1_poi)     #(+|-)?&[0-9]+&.
+    AFN1_main.concatenate(AFN1_nrB)     #(+|-)?&[0-9]+&.&[0-9]+
 
+    print("(+|-)?&[0-9]+&.&[0-9]+\n")
+    print(AFN1_main.convert_to_afd())
 
+    #Crear Autonata (+!-)?&[0-9]?
+    AFN2_main = AFN.createBasicAutomata('+')
+    AFN2_men = AFN.createBasicAutomata('-')
+    AFN2_nrA = AFN.createRangeAutomata('0','9')
+
+    AFN2_main.union(AFN2_men)   #(+|-)    
+    AFN2_main.optional()        #(+|-)?
+    AFN2_nrA.kleene_plus()      #[0-9]+
+    AFN2_main.concatenate(AFN2_nrA)     #(+|-)?&[0-9]+
+
+    print("(+|-)?&[0-9]+&.&[0-9]+\n")
+    # print(AFN2_main)
+
+    #Crear Automata +&+
+    AFN4_main = AFN.createBasicAutomata('+')
+    AFN4_plus = AFN.createBasicAutomata('+')
+    AFN4_main.concatenate(AFN4_plus)
+
+    #Crear Automata +
+    AFN5_main = AFN.createBasicAutomata('+')
+    
 
 
 
