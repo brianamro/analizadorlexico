@@ -45,7 +45,13 @@ class Transition():
         Out = ""
         Out += str(self.state_from)+" to "+str(self.state_to)+" with "
         if self.min_Symbol != self.max_Symbol:
-            Out += self.min_Symbol+" - "+self.max_Symbol
+            Out += "["+self.min_Symbol+" - "+self.max_Symbol+"]"
+        elif self.min_Symbol == Alphabet.range_num:
+            Out += "[0-9]"
+        elif self.min_Symbol == Alphabet.range_min:
+            Out += "[a-z]"
+        elif self.min_Symbol == Alphabet.range_may:
+            Out += "[A-Z]"
         else:
             Out += self.min_Symbol
         return Out
