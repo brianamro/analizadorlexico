@@ -89,11 +89,9 @@ class AFN():
                 newStates.append(state)
             for state in AFN2.states:
                 newStates.append(state)
-            #Modificamos el objeto
-            self.ini_state = newIniSt
-            self.end_state = newEndSt
-            self.transitions = allTrans
-            self.states = newStates
+            #Creacion del nuevo Objeto
+            newAFN = AFN(newIniSt, newEndSt, allTrans, newStates)
+            return newAFN
         else:
             print("Se espera un Objeto Clase AFN como argumento")
             sys.exit()
@@ -123,10 +121,9 @@ class AFN():
             #Segundo auotamta
             for state in AFN2.states:
                 newStates.append(state)
-            #Modifacion del autoamata
-            self.end_state = AFN2.end_state
-            self.transitions = allTrans
-            self.states = newStates
+            #Creacion del nuevo Objeto
+            newAFN = AFN(self.ini_state, AFN2.end_state, allTrans, newStates)
+            return newAFN
             
         else:
             print("Se esperaba un obejeto clase AFN\n")
@@ -153,11 +150,9 @@ class AFN():
         newTransitions.append(t_end)
         t_optional = Transition(newIniState, newEndState, Epsilon.symbol)
         newTransitions.append(t_optional)
-        #Modificacion del Objeto
-        self.ini_state = newIniState
-        self.end_state = newEndState
-        self.transitions = newTransitions
-        self.states = newStates
+        #Creacion del nuevo Objeto
+        newAFN = AFN(newIniState, newEndState, newTransitions, newStates)
+        return newAFN
 
     #Cerradura +
     #Modifica el automata SELF
@@ -166,7 +161,7 @@ class AFN():
         self.deleteAcceptState()
         #Traemos las Transiciones ya existentes
         newTransitions = self.transitions
-        #Transicion del final acutal, al inicial actual
+        #Transicion del final actual, al inicial actual
         t_return = Transition(self.end_state, self.ini_state, Epsilon.symbol)
         newTransitions.append(t_return)
         #Nuevos estados
@@ -180,12 +175,10 @@ class AFN():
         newTransitions.append(t_ini)
         t_end = Transition(self.end_state, end_State, Epsilon.symbol)
         newTransitions.append(t_end)
-        #Modificacion del Objeto
-        self.ini_state = ini_State
-        self.end_state = end_State
-        self.transitions = newTransitions
-        self.states = newStates
-    
+        #Creacion del nuevo Objeto
+        newAFN = AFN(ini_State, end_State, newTransitions, newStates)
+        return newAFN
+
     #Cerradura *
     #Modifica el automata SELF
     def kleene_star(self):
@@ -210,11 +203,9 @@ class AFN():
         newTransitions.append(t_end)
         t_optional = Transition(ini_State, end_State, Epsilon.symbol)
         newTransitions.append(t_optional)
-        #Modificacion del Objeto
-        self.ini_state = ini_State
-        self.end_state = end_State
-        self.transitions = newTransitions
-        self.states = newStates
+        #Creacion del nuevo Objeto
+        newAFN = AFN(ini_State, end_State, newTransitions, newStates)
+        return newAFN
     
     #Cerradura Epsilon, recibe un estado
     def C_Epsilon_state(self, state):
@@ -401,13 +392,13 @@ def main():
     AFN1_poi = AFN.createBasicAutomata('.')
     AFN1_nrB = AFN.createBasicAutomata('d')
 
-    AFN1_main.union(AFN1_men)   #(+|-)    
-    AFN1_main.optional()        #(+|-)?
-    AFN1_nrA.kleene_plus()      #[0-9]+
-    AFN1_nrB.kleene_plus()      #[0-9]+
-    AFN1_main.concatenate(AFN1_nrA)     #(+|-)?&[0-9]+
-    AFN1_main.concatenate(AFN1_poi)     #(+|-)?&[0-9]+&.
-    AFN1_main.concatenate(AFN1_nrB)     #(+|-)?&[0-9]+&.&[0-9]+
+    AFN1_main = AFN1_main.union(AFN1_men)   #(+|-)    
+    AFN1_main = AFN1_main.optional()        #(+|-)?
+    AFN1_nrA = AFN1_nrA.kleene_plus()       #[0-9]+
+    AFN1_nrB = AFN1_nrB.kleene_plus()       #[0-9]+
+    AFN1_main = AFN1_main.concatenate(AFN1_nrA)     #(+|-)?&[0-9]+
+    AFN1_main = AFN1_main.concatenate(AFN1_poi)     #(+|-)?&[0-9]+&.
+    AFN1_main = AFN1_main.concatenate(AFN1_nrB)     #(+|-)?&[0-9]+&.&[0-9]+
 
     print("(+|-)?&[0-9]+&.&[0-9]+\n")
     print(AFN1_main.convert_to_afd())
