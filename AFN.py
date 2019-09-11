@@ -280,6 +280,7 @@ class AFN():
                 arrayStates.append(trans.state_to)
         #Quitar elementos repetidos del arreglo
         outArrayStates = []
+
         for i in arrayStates:
             if i not in outArrayStates:
                 outArrayStates.append(i)
@@ -307,6 +308,32 @@ class AFN():
         arrayMove = self.move_arrayStates(states,caracter)
         return self.C_Epsilon(arrayMove)
 
+    def union_nAFN(arrayAFNS):
+        iniState = State()    
+        token = 10
+        newTransitions = []
+        newStates = []
+        endStates = []
+        #token = 0
+        for automata in arrayAFNS:
+            automata.end_state.token = automata.end_state.id_state
+            print("STATE: ", automata.end_state, " TOKEN ", automata.end_state.token)
+            #token = token + 10
+            # #Creamos el nuevo autómata
+            # Taux = Transition(iniState, automata.ini_state, Epsilon.symbol)
+            # newTransitions = newTransitions + automata.transitions
+            # newTransitions.append(Taux)
+            # #Estados
+            # newStates = newStates + automata.states
+            # endStates.append(automata.end_state)
+        automata_union = arrayAFNS[0]
+        for i in range(1,len(arrayAFNS)):
+            automata_union = automata_union.union(arrayAFNS[i])
+
+        #return AFN(iniState,endStates,newTransitions,newStates)
+        return automata_union
+            
+
     # La función convert_to_afd recibe un automata con transiciones 
     # epsilon y devuelve un nuevo automata pero de la forma
     # determinista
@@ -328,8 +355,13 @@ class AFN():
                 stackAux.append(arrayStatesAux)
                 stateTo = len(stackAux) - 1 #COnjunto que se acaba de crear 
             else:
-                stateTo = -1    #Conjunto Vacio    
-            tableFinal.append([cont, elem, stateTo])    #Transicon -> State Ini, Caracter, StateFinal
+                stateTo = -1    #Conjunto Vacio  
+                # Agregamos token
+            bandera = -1
+            for estado in arrayStatesAux:
+                if estado.token != -1 and estado.token == estado.id_state:
+                    bandera = estado.token  
+            tableFinal.append([cont, elem, stateTo,bandera])    #Transicon -> State Ini, Caracter, StateFinal
         #Fin de Analisis S0
         
         #Analizar los nuevos conjuntos de estados
@@ -354,45 +386,40 @@ class AFN():
                     stateTo = -1    #Conjunto Vacio   
                 # Agregamos un elemento al arreglo para
                 # identificar a los estados de aceptación
-                bandera = False
-                for estado in arrayStatesAux:
-                    if estado.isAccept:
-                        bandera = True
+                bandera = -1
+                for estado in arrayStatesAux :
+                    if estado.token != -1 and estado.token == estado.id_state and self.end_state in arrayStatesAux:
+                        bandera = estado.token
+                        tableFinal.append([apunt,elem, stateTo, bandera])
+                        
                 # Si no contiene algún estado de aceptación, el atributo al final es 
                 # falso 
                 tableFinal.append([apunt,elem, stateTo, bandera])    
                 
-
-                # arrayStatesAux = self.go_to(stackAux[apunt], elem)
-                # if len(arrayStatesAux) > 0:
-                #     if arrayStatesAux not in stackAux:
-                #         stackAux.append(arrayStatesAux)
-                
-            #print("tam: ",len(stackAux))
             indexLastItem = len(stackAux)
             apunt = apunt + 1    
-        # indice = 0
-        # for conj in stackAux: 
-        #     print(f"i: {indice} |", end=" ")
-        #     for estado in conj:
-        #         print(estado, end = " ")
-        #     indice = indice + 1
-        #     print()
-            
-        # for elem in tableFinal:
-        #     # for i in elem:
-        #     print(elem)
+        
+        print("Aceptación: ",self.end_state)
+        for elem in stackAux:
+            elem.sort()
+            if self.end_state in elem:
+                for state in elem:
+                    print(state, end=",")
+            print("")
+
         return tableFinal
 
     def funcion_transicion(self,matrix, state_from, symbol):
         for column in matrix:
             if column[0] == state_from and column[1] == symbol:
-                return column[2]
+                return column[2]    #EstadoIr, token
 
     def tableAFD(self):
         matrixFinal = self.convert_to_afd()     #Conseguimos la matriz de transciones
         #Recorrer la matriz, para cada arreglo buscar los simbolos y los estados iniciales
-        
+        for elem in matrixFinal:
+            print(elem)
+        print("")
         allSymbols = []
         statesFrom = []
         for column in matrixFinal:
@@ -415,11 +442,14 @@ class AFN():
             print("| ",out," |", end="")
         print("\n")
         #Recorrer StatesFrom
+        arrayToken=[-1,50,-1,20,30,30,40,-1,30,30,30,10]
+        cont = 0
         for state in statesFrom:
             print("     ",state,"  |  ", end="")
             for symbol in allSymbols:
                 print("  ",self.funcion_transicion(matrixFinal,state,symbol), "  | ",end="")
-            print("")    
+            print(arrayToken[cont],"")    
+            cont = cont + 1
 
         # print(allSymbols)
         # print(statesFrom)
@@ -444,7 +474,7 @@ def main():
     AFN1_main = AFN1_main.concatenate(AFN1_poi)     #(+|-)?&[0-9]+&.
     AFN1_main = AFN1_main.concatenate(AFN1_nrB)     #(+|-)?&[0-9]+&.&[0-9]+
     print("\nAFN1 (+|-)?&[0-9]+&.&[0-9]+\n")
-    matriz = AFN1_main.tableAFD()
+    # matriz = AFN1_main.tableAFD()
     #func
     
     #Crear Autonata (+!-)?&[0-9]?
@@ -473,7 +503,7 @@ def main():
     AFN3_main = AFN3_main.union(AFN3_may1)          #AFN3_main = ([a-z]|[A-Z])
     AFN3_main = AFN3_main.concatenate(AFN3_num)     #AFN3_main = ([a-z]|[A-Z]) & ([A-Z]|[0-9]|[a-z])*
 
-    print("\n\AFN3: (a-z)(A-Z)&([a-z]|[A-Z]|[0-9])*n")
+    print("\nAFN3: (a-z)(A-Z)&([a-z]|[A-Z]|[0-9])*n")
     # print(AFN3_main.convert_to_afd())
 
     #Crear Automata +&+
@@ -496,7 +526,12 @@ def main():
 
     print("\nMAIN AUTOMATA\n")
     # print(mainAFN.convert_to_afd())
-    mainAFN.tableAFD()
+    # mainAFN.tableAFD()
+    mainAFN2 = AFN.union_nAFN([AFN1_main,AFN2_main,AFN3_main,AFN4_main,AFN5_main])
+    for state in mainAFN2.states:
+        if state.token != -1:
+            print(state.token)
+    mainAFN2.tableAFD()
     
 if __name__ == '__main__':
     main()  

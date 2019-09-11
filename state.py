@@ -10,6 +10,7 @@ class State():
     def __init__(self, value=False):
         self.accept = value
         self.id_state = State.id_state
+        self.token = -1
         State.id_state = State.id_state+1
     #Sobrecargamos el método de imprimir para poder iprimir el ID del estado
     def __str__(self):
