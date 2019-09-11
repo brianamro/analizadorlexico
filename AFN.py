@@ -308,24 +308,21 @@ class AFN():
         arrayMove = self.move_arrayStates(states,caracter)
         return self.C_Epsilon(arrayMove)
 
+    #Funcion que un un arreglo de AFNS en un uno solo,
+    # ademas de asignar un token unico a cada uno de los estados de aceptacion
+    # de los automatas dados como argumentos
+    #Recibe arreglo de AFN, retorna AFN
     def union_nAFN(arrayAFNS):
         iniState = State()    
         token = 10
         newTransitions = []
         newStates = []
         endStates = []
-        #token = 0
+        token = 10       #Inicializar
         for automata in arrayAFNS:
-            automata.end_state.token = automata.end_state.id_state
-            print("STATE: ", automata.end_state, " TOKEN ", automata.end_state.token)
-            #token = token + 10
-            # #Creamos el nuevo autómata
-            # Taux = Transition(iniState, automata.ini_state, Epsilon.symbol)
-            # newTransitions = newTransitions + automata.transitions
-            # newTransitions.append(Taux)
-            # #Estados
-            # newStates = newStates + automata.states
-            # endStates.append(automata.end_state)
+            automata.end_state.token = token
+            token = token + 10
+            
         automata_union = arrayAFNS[0]
         for i in range(1,len(arrayAFNS)):
             automata_union = automata_union.union(arrayAFNS[i])
@@ -358,9 +355,6 @@ class AFN():
                 stateTo = -1    #Conjunto Vacio  
                 # Agregamos token
             bandera = -1
-            for estado in arrayStatesAux:
-                if estado.token != -1 and estado.token == estado.id_state:
-                    bandera = estado.token  
             tableFinal.append([cont, elem, stateTo,bandera])    #Transicon -> State Ini, Caracter, StateFinal
         #Fin de Analisis S0
         
@@ -387,26 +381,25 @@ class AFN():
                 # Agregamos un elemento al arreglo para
                 # identificar a los estados de aceptación
                 bandera = -1
-                for estado in arrayStatesAux :
-                    if estado.token != -1 and estado.token == estado.id_state and self.end_state in arrayStatesAux:
-                        bandera = estado.token
-                        tableFinal.append([apunt,elem, stateTo, bandera])
-                        
-                # Si no contiene algún estado de aceptación, el atributo al final es 
-                # falso 
                 tableFinal.append([apunt,elem, stateTo, bandera])    
                 
             indexLastItem = len(stackAux)
             apunt = apunt + 1    
-        
-        print("Aceptación: ",self.end_state)
+
+        #Buscar el token del subconjunto de estados
         for elem in stackAux:
             elem.sort()
-            if self.end_state in elem:
+            if self.end_state in elem:  #Estado de aceptacion del autoamta esta en el conjunto de estados
                 for state in elem:
-                    print(state, end=",")
-            print("")
-
+                    if state.token != -1:
+                        #Buscar el indice del element
+                        #Ya que hace el papel de State To em la tabla final
+                        index = stackAux.index(elem)
+                        # print(index, "", state.token, end=",")
+                        for tupla in tableFinal:
+                            if tupla[0] == index:
+                                tupla[3] = state.token
+     
         return tableFinal
 
     def funcion_transicion(self,matrix, state_from, symbol):
@@ -414,21 +407,21 @@ class AFN():
             if column[0] == state_from and column[1] == symbol:
                 return column[2]    #EstadoIr, token
 
+    #Funcion que imprime la tabla de transicion Fiinal
     def tableAFD(self):
         matrixFinal = self.convert_to_afd()     #Conseguimos la matriz de transciones
-        #Recorrer la matriz, para cada arreglo buscar los simbolos y los estados iniciales
-        for elem in matrixFinal:
-            print(elem)
-        print("")
         allSymbols = []
         statesFrom = []
+        tokenFinal = []
         for column in matrixFinal:
             if column[1] not in allSymbols:     #Traer Simbolos
                 allSymbols.append(column[1])  
             if column[0] not in statesFrom:
                 statesFrom.append(column[0])    #Traes Estados Inciales
+            if [column[0], column[3]] not in tokenFinal:
+                tokenFinal.append([column[0],column[3]])    #Conseguir Token
         #Recorrer Arreglo de simbolos
-        print("  Estado   ",end="")
+        print("\n  Estado   ",end="")
         for elem in allSymbols:
             out = ""
             if elem == Alphabet.range_num:
@@ -440,20 +433,20 @@ class AFN():
             else:
                 out = elem
             print("| ",out," |", end="")
+        print("| token |", end="")
         print("\n")
-        #Recorrer StatesFrom
-        arrayToken=[-1,50,-1,20,30,30,40,-1,30,30,30,10]
+        
         cont = 0
         for state in statesFrom:
-            print("     ",state,"  |  ", end="")
+            print("  ",state,"  | ", end="")
             for symbol in allSymbols:
                 print("  ",self.funcion_transicion(matrixFinal,state,symbol), "  | ",end="")
-            print(arrayToken[cont],"")    
+            for tupla in matrixFinal:
+                if tupla[0] == state:
+                    print(" || ",tupla[3])
+                    break
+            print("")
             cont = cont + 1
-
-        # print(allSymbols)
-        # print(statesFrom)
-
 
 
 def main():
@@ -525,12 +518,7 @@ def main():
     mainAFN = mainAFN.union(AFN5_main)      #mainAFN = (((AFN1 | AFN2) | AFN3) | AFN4) | AFN5
 
     print("\nMAIN AUTOMATA\n")
-    # print(mainAFN.convert_to_afd())
-    # mainAFN.tableAFD()
     mainAFN2 = AFN.union_nAFN([AFN1_main,AFN2_main,AFN3_main,AFN4_main,AFN5_main])
-    for state in mainAFN2.states:
-        if state.token != -1:
-            print(state.token)
     mainAFN2.tableAFD()
     
 if __name__ == '__main__':
