@@ -412,14 +412,12 @@ class AFN():
         matrixFinal = self.convert_to_afd()     #Conseguimos la matriz de transciones
         allSymbols = []
         statesFrom = []
-        tokenFinal = []
+        
         for column in matrixFinal:
             if column[1] not in allSymbols:     #Traer Simbolos
                 allSymbols.append(column[1])  
             if column[0] not in statesFrom:
                 statesFrom.append(column[0])    #Traes Estados Inciales
-            if [column[0], column[3]] not in tokenFinal:
-                tokenFinal.append([column[0],column[3]])    #Conseguir Token
         #Recorrer Arreglo de simbolos
         print("\n  Estado   ",end="")
         for elem in allSymbols:
@@ -445,7 +443,6 @@ class AFN():
                 if tupla[0] == state:
                     print(" || ",tupla[3])
                     break
-            print("")
             cont = cont + 1
 
 
