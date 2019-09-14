@@ -312,23 +312,23 @@ class AFN():
     # ademas de asignar un token unico a cada uno de los estados de aceptacion
     # de los automatas dados como argumentos
     #Recibe arreglo de AFN, retorna AFN
-    def union_nAFN(arrayAFNS):
-        iniState = State()    
-        token = 10
-        newTransitions = []
-        newStates = []
-        endStates = []
-        token = 10       #Inicializar
-        for automata in arrayAFNS:
-            automata.end_state.token = token
-            token = token + 10
-            
-        automata_union = arrayAFNS[0]
-        for i in range(1,len(arrayAFNS)):
-            automata_union = automata_union.union(arrayAFNS[i])
+    def union_nAFN(arrayAFNS, arrayTokens):
+        #Revisamos que ambos argumetnos sean de tipo lista
+        if isinstance(arrayAFNS, list) and isinstance(arrayTokens,list):
+            #Revisar que la longitud sea la misma
+            if len(arrayAFNS) == len(arrayTokens):
 
-        #return AFN(iniState,endStates,newTransitions,newStates)
-        return automata_union
+                #Asigaamos los tokenes dados a cada automata
+                for i in range(0, len(arrayAFNS)):
+                    arrayAFNS[i].end_state.token = arrayTokens[i]
+
+                #Unimos todos los AFN
+                automata_union = arrayAFNS[0]
+                for i in range(1,len(arrayAFNS)):
+                    automata_union = automata_union.union(arrayAFNS[i])
+
+            
+            return automata_union
             
 
     # La función convert_to_afd recibe un automata con transiciones 
@@ -353,7 +353,7 @@ class AFN():
                 stateTo = len(stackAux) - 1 #COnjunto que se acaba de crear 
             else:
                 stateTo = -1    #Conjunto Vacio  
-                # Agregamos token
+            # Agregamos token
             bandera = -1
             tableFinal.append([cont, elem, stateTo,bandera])    #Transicon -> State Ini, Caracter, StateFinal
         #Fin de Analisis S0
@@ -362,8 +362,6 @@ class AFN():
         apunt = 1
         indexLastItem = len(stackAux)
 
-       # print("I: ", indexLastItem)
-        
         #Calcular las transciones epsilon de los otros estados
         while apunt < indexLastItem:
             #Analizar nuevos conjuntos SX
@@ -386,65 +384,28 @@ class AFN():
             indexLastItem = len(stackAux)
             apunt = apunt + 1    
 
+        arrayAcceptStates = []
         #Buscar el token del subconjunto de estados
         for elem in stackAux:
             elem.sort()
             if self.end_state in elem:  #Estado de aceptacion del autoamta esta en el conjunto de estados
                 for state in elem:
                     if state.token != -1:
-                        #Buscar el indice del element
-                        #Ya que hace el papel de State To em la tabla final
+                        #Buscar el indice del elemen
+                        #Ya que hace el papel de "Estado inicial" en la tabla de transiciones
                         index = stackAux.index(elem)
-                        # print(index, "", state.token, end=",")
+                        #Insertar estados de aceptacion en un arreglo
+                        arrayAcceptStates.append(index)
                         for tupla in tableFinal:
                             if tupla[0] == index:
                                 tupla[3] = state.token
-     
-        return tableFinal
+        #Creamos un Objeto AFD
+        AFD_Final = AFD(0, arrayAcceptStates, tableFinal, self.get_alpahbet)
+        return AFD_Final
 
-    def funcion_transicion(self,matrix, state_from, symbol):
-        for column in matrix:
-            if column[0] == state_from and column[1] == symbol:
-                return column[2]    #EstadoIr, token
+    
 
-    #Funcion que imprime la tabla de transicion Fiinal
-    def tableAFD(self):
-        matrixFinal = self.convert_to_afd()     #Conseguimos la matriz de transciones
-        allSymbols = []
-        statesFrom = []
-        
-        for column in matrixFinal:
-            if column[1] not in allSymbols:     #Traer Simbolos
-                allSymbols.append(column[1])  
-            if column[0] not in statesFrom:
-                statesFrom.append(column[0])    #Traes Estados Inciales
-        #Recorrer Arreglo de simbolos
-        print("\n  Estado   ",end="")
-        for elem in allSymbols:
-            out = ""
-            if elem == Alphabet.range_num:
-                out = "[0-9]"  
-            elif elem == Alphabet.range_min:
-                out = "[A-Z]"  
-            elif elem == Alphabet.range_may:
-                out = "[a-z]"
-            else:
-                out = elem
-            print("| ",out," |", end="")
-        print("| token |", end="")
-        print("\n")
-        
-        cont = 0
-        for state in statesFrom:
-            print("  ",state,"  | ", end="")
-            for symbol in allSymbols:
-                print("  ",self.funcion_transicion(matrixFinal,state,symbol), "  | ",end="")
-            for tupla in matrixFinal:
-                if tupla[0] == state:
-                    print(" || ",tupla[3])
-                    break
-            cont = cont + 1
-
+    #Funcion que convierte un a
 
 def main():
     #--------------  M  A  I  N  --------------
@@ -515,8 +476,9 @@ def main():
     mainAFN = mainAFN.union(AFN5_main)      #mainAFN = (((AFN1 | AFN2) | AFN3) | AFN4) | AFN5
 
     print("\nMAIN AUTOMATA\n")
-    mainAFN2 = AFN.union_nAFN([AFN1_main,AFN2_main,AFN3_main,AFN4_main,AFN5_main])
-    mainAFN2.tableAFD()
+    mainAFN2 = AFN.union_nAFN([AFN1_main,AFN2_main,AFN3_main,AFN4_main,AFN5_main], [10,20,30,40,50])
+    AFD1 = mainAFN2.convert_to_afd()
+    AFD1.printTrasitionTable()
     
 if __name__ == '__main__':
     main()  
