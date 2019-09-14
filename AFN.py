@@ -5,6 +5,8 @@ from transition import Epsilon
 from state import State
 from alphabet import Alphabet
 
+# from AFD import AFD
+
 class AFN():
     id_AFN = 0
     def __init__(self, ini_state, end_state, transitions, states):
@@ -25,24 +27,19 @@ class AFN():
         Out  = "AFN: "+str(self.id_AFN)+"\n"
         #Impresion de estados
         Out += "States: ["
+        self.states.sort(key = lambda x:x.id_state)
         for state in self.states:
             Out += str(state)+","
         Out += "]\n"
         Out += "Inicial: "+str(self.ini_state)+"\n"
         #Imprimir Transiciones
+        self.transitions.sort(key=lambda x: x.state_from)
         for trans in self.transitions:
             Out += str(trans)+"\n"
         #Imprimir estados de Aceptacion
-        Out += "Acceptacion: " +str(self.end_state)+ "\n"
+        Out += "Aceptacion: " +str(self.end_state)+ "\n"
         return Out
-    #Agregar un array de estados al AFN
-    def addStates(self, states):
-        if isinstance(states, list):
-            for state in states:
-                self.states.append(state)
-        else:
-            print("Solo se recibe array de estados")
-            sys.exit()
+    
     #Poner en falso el estado de aceptacion de un autoamta
     def deleteAcceptState(self):
         self.end_state.deleteAccept()
@@ -79,17 +76,13 @@ class AFN():
             t2_e = Transition(AFN2.end_state, newEndSt, Epsilon.symbol)
             allTrans = allTrans + [t1_e, t2_e]   
             #Insertamos las transiciones ya exisitentes de cada uno de los Automatas
-            for trans in self.transitions:
-                allTrans.append(trans)
-            for trans in AFN2.transitions:
-                allTrans.append(trans)
+            allTrans.extend(self.transitions)
+            allTrans.extend(AFN2.transitions)
             #Agregamos los nuevos estados
             newStates = [newIniSt, newEndSt]  
             #Estados ya exisitentes
-            for state in self.states:
-                newStates.append(state)
-            for state in AFN2.states:
-                newStates.append(state)
+            newStates.extend(self.states)
+            newStates.extend(AFN2.states)
             #Creacion del nuevo Objeto
             newAFN = AFN(newIniSt, newEndSt, allTrans, newStates)
             return newAFN
@@ -110,18 +103,12 @@ class AFN():
             t_inter = Transition(self.end_state, AFN2.ini_state, Epsilon.symbol)
             allTrans.append(t_inter)     #Insertar Transicion Intermedia
             #Transiciones existentes
-            for transition in self.transitions:  #Primer Automata
-                allTrans.append(transition)    
-            for transition in AFN2.transitions:  #Segundo Automata
-                allTrans.append(transition)    
+            allTrans.extend(self.transitions)    
+            allTrans.extend(AFN2.transitions)
             #Juntar todos los estados de cada uno de los automatas
             newStates = []
-            #Primer AFN
-            for state in self.states:
-                newStates.append(state)
-            #Segundo auotamta
-            for state in AFN2.states:
-                newStates.append(state)
+            newStates.extend(self.states) #Primer AFN
+            newStates.extend(AFN2.states)#Segundo auotamta
             #Creacion del nuevo Objeto
             newAFN = AFN(self.ini_state, AFN2.end_state, allTrans, newStates)
             return newAFN
@@ -136,14 +123,16 @@ class AFN():
         #Eliminar Aceptacion del mismo automata
         self.deleteAcceptState()
         #Traer estados existentes
-        newStates = self.states
+        newStates = []
+        newStates.extend(self.states)
         #Crear Nuevos estados
         newIniState = State()   
         newStates.append(newIniState)
         newEndState = State(True)
         newStates.append(newEndState)
         #Transiciones ya exisitentes
-        newTransitions = self.transitions   
+        newTransitions = []
+        newTransitions.extend(self.transitions)   
         #Nuevas Transiciones 
         t_ini = Transition(newIniState, self.ini_state, Epsilon.symbol)
         newTransitions.append(t_ini)
@@ -236,7 +225,7 @@ class AFN():
             sys.exit()
 
     # Este metodo obtiene el alfabeto de un AFN
-    def get_alpahbet(self):
+    def get_alphabet(self):
         # En el arreglo llamado aux guardaremos todos los caracteres
         # de todas las transiciones
         aux = []
@@ -318,28 +307,56 @@ class AFN():
             #Revisar que la longitud sea la misma
             if len(arrayAFNS) == len(arrayTokens):
 
-                #Asigaamos los tokenes dados a cada automata
+                #Asignamos los tokenes dados a cada automata
                 for i in range(0, len(arrayAFNS)):
                     arrayAFNS[i].end_state.token = arrayTokens[i]
-
                 #Unimos todos los AFN
                 automata_union = arrayAFNS[0]
-                for i in range(1,len(arrayAFNS)):
-                    automata_union = automata_union.union(arrayAFNS[i])
+                iniState = State()
+                endState = State(True)
+                newTransitions = []
+                newStates = []
+                for AFNElem in arrayAFNS:
+                    tIniAux = Transition(iniState, AFNElem.ini_state, Epsilon.symbol)
+                    tEndAux = Transition(AFNElem.end_state, endState, Epsilon.symbol)
+                    newTransitions.append(tIniAux)
+                    newTransitions.append(tEndAux)
+                    newTransitions.extend(AFNElem.transitions)
+                    #States
+                    newStates.extend(AFNElem.states)
+                #Insertar Nuevo Estado Inicial y Final
+                newStates.append(iniState)
+                newStates.append(endState)
 
-            
-            return automata_union
+                # for i in range(1,len(arrayAFNS)):
+                #     automata_union = automata_union.union(arrayAFNS[i])
+                
+            return AFN(iniState, endState, newTransitions, newStates)
             
 
     # La función convert_to_afd recibe un automata con transiciones 
     # epsilon y devuelve un nuevo automata pero de la forma
     # determinista
-    def convert_to_afd(self): 
-        #Conseguir alfabeto del afn
-        alphabet = self.get_alpahbet()
+    def convert_to_afd(self, alphabet = False): 
+        thisAFNAlphabet = self.get_alphabet()
+        if not alphabet:    #Conseguir alfabeto del afn
+            alphabet = thisAFNAlphabet
+        else:
+            if len(alphabet) == len(thisAFNAlphabet):
+                cont = 0
+                for elem in alphabet:
+                    if elem in thisAFNAlphabet:
+                        cont = cont + 1
+                if cont != len(thisAFNAlphabet):
+                    print("Error en el alfabeto introducido favor de verificarlo")
+                    sys.exit()
+            else:
+                print("Error en el alfabeto introducido favor de verificarlo")
+                sys.exit()
         #Calcular la cerradura epislon del estado inicial
         S0 = self.C_Epsilon_state(self.ini_state)
         
+
         stackAux = []           #Conjuntos de Estados
         stackAux.append(S0)     #Instartar S0
 
@@ -361,7 +378,7 @@ class AFN():
         #Analizar los nuevos conjuntos de estados
         apunt = 1
         indexLastItem = len(stackAux)
-
+        
         #Calcular las transciones epsilon de los otros estados
         while apunt < indexLastItem:
             #Analizar nuevos conjuntos SX
@@ -371,7 +388,7 @@ class AFN():
                     
                     if arrayStatesAux not in stackAux:
                         stackAux.append(arrayStatesAux)
-                        stateTo = len(stackAux) - 1 #COnjunto que se acaba de crear 
+                        stateTo = len(stackAux) - 1 #Conjunto que se acaba de crear 
                     elif arrayStatesAux in stackAux:
                         stateTo =  stackAux.index(arrayStatesAux)
                 else:
@@ -387,7 +404,6 @@ class AFN():
         arrayAcceptStates = []
         #Buscar el token del subconjunto de estados
         for elem in stackAux:
-            elem.sort()
             if self.end_state in elem:  #Estado de aceptacion del autoamta esta en el conjunto de estados
                 for state in elem:
                     if state.token != -1:
@@ -399,86 +415,80 @@ class AFN():
                         for tupla in tableFinal:
                             if tupla[0] == index:
                                 tupla[3] = state.token
-        #Creamos un Objeto AFD
-        AFD_Final = AFD(0, arrayAcceptStates, tableFinal, self.get_alpahbet)
-        return AFD_Final
-
-    
+        #Regresamos un array con 3 parametros para crear un objeto AFD
+        arrayOut = [arrayAcceptStates, tableFinal,  self.get_alphabet]
+        return arrayOut
+        # AFD_Final = AFD(0, arrayAcceptStates, tableFinal, self.get_alphabet)
+        # return AFD_Final
 
     #Funcion que convierte un a
 
 def main():
     #--------------  M  A  I  N  --------------
-
-    #Crear automata (+|-)?&[0-9]+&.&[0-9]+
+    print("---- A   F   N   D ----")
+    
     AFN1_main = AFN.createBasicAutomata('+')
     AFN1_men = AFN.createBasicAutomata('-')
-    AFN1_nrA = AFN.createBasicAutomata(Alphabet.range_num) #0-9
-    AFN1_poi = AFN.createBasicAutomata('.')
-    AFN1_nrB = AFN.createBasicAutomata(Alphabet.range_num) #0-9
+    AFN1_main = AFN1_main.union(AFN1_men)
+    AFN1_main = AFN1_main.optional()
 
-    AFN1_main = AFN1_main.union(AFN1_men)   #(+|-)    
-    AFN1_main = AFN1_main.optional()        #(+|-)?
+    AFN1_nrA = AFN.createBasicAutomata(Alphabet.range_num) #0-9
     AFN1_nrA = AFN1_nrA.kleene_plus()       #[0-9]+
-    AFN1_nrB = AFN1_nrB.kleene_plus()       #[0-9]+
     AFN1_main = AFN1_main.concatenate(AFN1_nrA)     #(+|-)?&[0-9]+
+
+    AFN1_poi = AFN.createBasicAutomata('.')
     AFN1_main = AFN1_main.concatenate(AFN1_poi)     #(+|-)?&[0-9]+&.
-    AFN1_main = AFN1_main.concatenate(AFN1_nrB)     #(+|-)?&[0-9]+&.&[0-9]+
-    print("\nAFN1 (+|-)?&[0-9]+&.&[0-9]+\n")
-    # matriz = AFN1_main.tableAFD()
-    #func
+
+    AFN1_nrB = AFN.createBasicAutomata(Alphabet.range_num) #0-9
+    AFN1_nrB = AFN1_nrB.kleene_plus()       #[0-9]+
+
+    AFN1_main = AFN1_main.concatenate(AFN1_nrB)
+    print("AFN1 (+|-)?&[0-9]+&.&[0-9]+\n")
+    # print(AFN1_main)
     
-    #Crear Autonata (+!-)?&[0-9]?
+    #Crear Automata (+|-)?&[0-9]+
     AFN2_main = AFN.createBasicAutomata('+')
     AFN2_men = AFN.createBasicAutomata('-')
-    AFN2_nrA = AFN.createBasicAutomata(Alphabet.range_num)
-
-    AFN2_main = AFN2_main.union(AFN2_men)   #(+|-)    
+    AFN2_main = AFN2_main.union(AFN2_men)   #(+|-) 
     AFN2_main = AFN2_main.optional()        #(+|-)?
+
+    AFN2_nrA = AFN.createBasicAutomata(Alphabet.range_num)    #[0-9]
     AFN2_nrA = AFN2_nrA.kleene_plus()      #[0-9]+
     AFN2_main = AFN2_main.concatenate(AFN2_nrA)     #(+|-)?&[0-9]+
-    print("\nAFN2: (+|-)?&[0-9]+&.&[0-9]+\n")
-    # print(AFN2_main.convert_to_afd())
+    # print("AFN2: (+!-)?&[0-9]+\n")
 
     #Crear Automata ([a-z]|[A-Z])&([a-z]|[A-Z]|[0-9])*
-    AFN3_main = AFN.createBasicAutomata(Alphabet.range_min) #[a-z]
-    AFN3_may1 = AFN.createBasicAutomata(Alphabet.range_may)  #[A-Z]
+    AFN3_main = AFN.createBasicAutomata(Alphabet.range_min)     #[a-z]
+    AFN3_may1 = AFN.createBasicAutomata(Alphabet.range_may)     #[A-Z]
+    AFN3_main = AFN3_main.union(AFN3_may1)                      #AFN3_main = ([a-z]|[A-Z])
+
     AFN3_min1 = AFN.createBasicAutomata(Alphabet.range_min) #[a-z]
     AFN3_may2 = AFN.createBasicAutomata(Alphabet.range_may)  #[A-Z]
-    AFN3_num = AFN.createBasicAutomata(Alphabet.range_num)  #[A-Z]
+    AFN3_min1 = AFN3_min1.union(AFN3_may2)                      #AFN3_min1 = ([a-z]|[A-Z])
 
-    AFN3_num = AFN3_num.union(AFN3_may2)            #AFN3_num = [A-Z]|[0-9]
-    AFN3_num = AFN3_num.union(AFN3_min1)            #AFN3_num = [A-Z]|[0-9]|[a-z]
-    AFN3_num = AFN3_num.kleene_star()               #AFN3_num = ([A-Z]|[0-9]|[a-z])*
-
-    AFN3_main = AFN3_main.union(AFN3_may1)          #AFN3_main = ([a-z]|[A-Z])
+    AFN3_num = AFN.createBasicAutomata(Alphabet.range_num)  #[0-9]
+    AFN3_num = AFN3_num.union(AFN3_min1)                    #AFN3_num = |[a-z][A-Z]|[0-9]
+    AFN3_num = AFN3_num.kleene_star()                       #AFN3_num = ([A-Z]|[0-9]|[a-z])*
+    
     AFN3_main = AFN3_main.concatenate(AFN3_num)     #AFN3_main = ([a-z]|[A-Z]) & ([A-Z]|[0-9]|[a-z])*
 
-    print("\nAFN3: (a-z)(A-Z)&([a-z]|[A-Z]|[0-9])*n")
-    # print(AFN3_main.convert_to_afd())
+    # print("AFN3: (a-z)(A-Z)&([a-z]|[A-Z]|[0-9])*\n")
 
     #Crear Automata +&+
     AFN4_main = AFN.createBasicAutomata('+')
     AFN4_plus = AFN.createBasicAutomata('+')
     AFN4_main = AFN4_main.concatenate(AFN4_plus)
-    print("\nAFN4: +&+\n")
-    # print(AFN4_main.convert_to_afd())
+    # print("AFN4: +&+\n")
+
 
     #Crear Automata +
     AFN5_main = AFN.createBasicAutomata('+')
-    print("\nAFN5: +\n")
-    # print(AFN5_main.convert_to_afd())
 
     #AUTOMATA GRANDE UNION DE LOS 5 ANTERIORES
-    mainAFN = AFN1_main.union(AFN2_main)    #mainAFN = AFN1 | AFN2
-    mainAFN = mainAFN.union(AFN3_main)      #mainAFN = (AFN1 | AFN2) | AFN3
-    mainAFN = mainAFN.union(AFN4_main)      #mainAFN = ((AFN1 | AFN2) | AFN3) | AFN4
-    mainAFN = mainAFN.union(AFN5_main)      #mainAFN = (((AFN1 | AFN2) | AFN3) | AFN4) | AFN5
-
-    print("\nMAIN AUTOMATA\n")
-    mainAFN2 = AFN.union_nAFN([AFN1_main,AFN2_main,AFN3_main,AFN4_main,AFN5_main], [10,20,30,40,50])
-    AFD1 = mainAFN2.convert_to_afd()
-    AFD1.printTrasitionTable()
+    print("MAIN AUTOMATA\n")
+    mainAFN = AFN.union_nAFN([AFN1_main, AFN2_main, AFN3_main, AFN4_main, AFN5_main], [10,20,30,40,50])
+    
+    
     
 if __name__ == '__main__':
     main()  
