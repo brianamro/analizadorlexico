@@ -11,6 +11,7 @@ class RegularExp():
     def __init__(self, stringAn):
         self.stringAn = stringAn
         self.apCarActual = 0
+        self.stackSymbol = []
 
     def error(self):
         print("Error al analizar la cadena, en el caracter: ",self.apCarActual, " '",self.stringAn[self.apCarActual],"'")
@@ -21,8 +22,6 @@ class RegularExp():
 
     #Funcion que devuleve el Token de acuerdo con el caracter de la cadena que se esta analizando
     def getToken(self):
-        # print("Car actual: ", self.stringAn[self.apCarActual])
-        # print("Longitud: ", len(self.stringAn))
         if self.apCarActual < len(self.stringAn):
             car = self.stringAn[self.apCarActual]
             self.apCarActual = self.apCarActual + 1 #Incrementamos el apuntador del caracter Actual
@@ -43,7 +42,7 @@ class RegularExp():
             else:                                   #a-z, A-Z, 0-9
                 return Token.symbol_ALL
         else:
-            return 100    #Se ha terminado de analizar la cadena
+            return 0    #Se ha terminado de analizar la cadena
 
     
     def E(self):    #E -> TE'
@@ -58,7 +57,7 @@ class RegularExp():
         token = self.getToken()
         if(token == Token.symbol_OR):   # '|'
             if(self.T()):
-                print("|")
+                self.stackSymbol.append("|")   #Insertar en la pila simbolo de union
                 if(self.Ep()):
                     return True
             self.error()
@@ -79,7 +78,7 @@ class RegularExp():
         token = self.getToken()
         if token == Token.symbol_CONC:
             if(self.C()):
-                print("&")
+                self.stackSymbol.append("&")   #Insertar en la pila simbolo de concatenacion
                 if(self.Tp()):
                     return True
             self.error()
@@ -99,19 +98,19 @@ class RegularExp():
         token = 0
         token = self.getToken()
         if token == Token.symbol_STAR:
-            print("*")
+            self.stackSymbol.append("*")   #Insertar en la pila simbolo de cerradura de Kleene
             if self.Cp():
                 return True
             self.error()
             return False
         elif token == Token.symbol_PLUS:
-            print("+")
+            self.stackSymbol.append("+")   #Insertar en la pila simbolo de cerradura de Positiva
             if self.Cp():
                 return True
             self.error()
             return False
         elif token == Token.symbol_INTER:
-            print("?")
+            self.stackSymbol.append("?")   #Insertar en la pila simbolo de Opcional
             if self.Cp():
                 return True
             self.error()
@@ -125,22 +124,72 @@ class RegularExp():
         token = 0
         token = self.getToken()
         if token == Token.symbol_PARI: 
-            print("(")
             if self.E():
                 token = self.getToken()
                 if token == Token.symbol_PARD:
-                    print(")")
                     return True
             self.error()
             return False
         elif token == Token.symbol_ALL:
-            print("car ",self.stringAn[self.apCarActual-1])
+            self.stackSymbol.append(self.stringAn[self.apCarActual-1])   #Insertar en la pila simbolo de un caracter
             return True
     
-    def analizeStr(self):
-        mainAFN
-        self.E()
+    #Crea un AFN apartir de la expresion Regular
+    #Returna un Objeto AFN
+    def createAFN(self):
+        self.E()        #Crear pila de simbolos
+        self.stackSymbol.reverse()
+        stackSym = self.stackSymbol #Invertir Simbolos
+        stackAutomata = []
+        while len(stackSym) > 0:
+            #Sacar cada elemento de pila
+            car = stackSym.pop()
+            # |
+            if car == Alphabet.symbol_OR:   
+                #Sacar los dos ultimos automatas de la pila de Automtas
+                # Para hacer la operacion union, y meterlo de nuevo en la pila
+                AFN1 = stackAutomata.pop() 
+                AFN2 = stackAutomata.pop()
+                AFNUnion = AFN1.union(AFN2)
+                stackAutomata.append(AFNUnion)  #Lo insertamos en la pila
+            # &
+            elif car == Alphabet.symbol_CONC:   
+                #Sacar los dos ultimos automatas de la pila de Automtas
+                # Para hacer la operacion concatenacion, y meterlo de nuevo en la pila
+                AFN1 = stackAutomata.pop() 
+                AFN2 = stackAutomata.pop()
+                AFNConc = AFN2.concatenate(AFN1)
+                stackAutomata.append(AFNConc)  #Lo insertamos en la pila
+            # ?
+            elif car == Alphabet.symbol_INTER:
+                #Operacion Opcional del ultimo automata en la pila
+                AFN1 = stackAutomata.pop()
+                AFNOp = AFN1.optional()
+                stackAutomata.append(AFNOp)  #Lo insertamos en la pila
+            # +
+            elif car == Alphabet.symbol_PLUS:
+                #Operacion Positiva del ultimo automata en la pila
+                AFN1 = stackAutomata.pop()
+                AFNPo = AFN1.kleene_plus()
+                stackAutomata.append(AFNOp)  #Lo insertamos en la pila
+            # *
+            elif car == Alphabet.symbol_STAR:
+                #Operacion Positiva del ultimo automata en la pila
+                AFN1 = stackAutomata.pop()
+                AFNS = AFN1.kleene_star()
+                stackAutomata.append(AFNOp)  #Lo insertamos en la pila
+            #Crear un autamata basico con el caracter
+            else:
+                AFNBasic = AFN.createBasicAutomata(car)
+                stackAutomata.append(AFNBasic)  #Insertar en la pila
+        #Devolver el automata creado
+        FinalAFN = stackAutomata.pop()
+        return FinalAFN
 
-EXP1 = RegularExp("((a&b)?)|(c&d)|((e&f)|z?)")
-EXP1.analizeStr()
+#Ejemplo de Como Crear un AFN a partir de una expresion regular
+
+# EXP1 = RegularExp("((a&b)?)|(c&d)|((e&f)|z?)")  
+# AFNR = EXP1.createAFN()
+# print(AFNR)
+
         

@@ -1,6 +1,7 @@
 import sys
 
 from alphabet import Alphabet
+from regEx import RegularExp
 
 class AFD():
     id_AFD = 0
@@ -66,19 +67,11 @@ class AFD():
                     break
             cont = cont + 1
 
-    #  --------------------------------------------------------------
-    #           R E G L A S    G R A M A T I C A L E S
-    #  --------------------------------------------------------------
-
-    def getToken():
-        car = self.thisString[self.apCarActual]
-
-
-
 
     #Funcion que genera un AFD apartir una de una expresion regular 
     # ademas de agregar un token dado, en su estado de aceptacion
 
-    def createAFDexpRegular( string, token):
-
+    def createAFDexpRegular(self, string, token):
+        EXPReg = RegularExp(string)
+        AFNReg = EXPReg.createAFN()
 
