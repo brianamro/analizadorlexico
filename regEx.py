@@ -1,4 +1,4 @@
-
+import sys
 
 from AFN import AFN
 from alphabet import Alphabet
@@ -14,8 +14,8 @@ class RegularExp():
         self.stackSymbol = []
 
     def error(self):
-        print("Error al analizar la cadena, en el caracter: ",self.apCarActual, " '",self.stringAn[self.apCarActual],"'")
-    
+        print("Error al analizar la cadena, en el caracter: ",self.apCarActual+1, " '",self.stringAn[self.apCarActual],"'")
+        sys.exit()
     #Funcion que da  "un paso atras" en el apuntador de la cadena
     def backTrack(self):
         self.apCarActual = self.apCarActual - 1
@@ -25,7 +25,7 @@ class RegularExp():
         if self.apCarActual < len(self.stringAn):
             car = self.stringAn[self.apCarActual]
             self.apCarActual = self.apCarActual + 1 #Incrementamos el apuntador del caracter Actual
-            if car == Token.symbol_PLUS:            #'+':
+            if car == Alphabet.symbol_PLUS:            #'+':
                 return Token.symbol_PLUS
             elif car == Alphabet.symbol_STAR:       #'*'
                 return Token.symbol_STAR
@@ -171,13 +171,13 @@ class RegularExp():
                 #Operacion Positiva del ultimo automata en la pila
                 AFN1 = stackAutomata.pop()
                 AFNPo = AFN1.kleene_plus()
-                stackAutomata.append(AFNOp)  #Lo insertamos en la pila
+                stackAutomata.append(AFNPo)  #Lo insertamos en la pila
             # *
             elif car == Alphabet.symbol_STAR:
                 #Operacion Positiva del ultimo automata en la pila
                 AFN1 = stackAutomata.pop()
                 AFNS = AFN1.kleene_star()
-                stackAutomata.append(AFNOp)  #Lo insertamos en la pila
+                stackAutomata.append(AFNS)  #Lo insertamos en la pila
             #Crear un autamata basico con el caracter
             else:
                 AFNBasic = AFN.createBasicAutomata(car)
@@ -188,7 +188,8 @@ class RegularExp():
 
 #Ejemplo de Como Crear un AFN a partir de una expresion regular
 
-# EXP1 = RegularExp("((a&b)?)|(c&d)|((e&f)|z?)")  
+# EXP1 = RegularExp("((a&b)?)|(c&d)|((e&f)|z?)|n?|(d&.&d)")  
+# print(EXP1.stackSymbol)
 # AFNR = EXP1.createAFN()
 # print(AFNR)
 
