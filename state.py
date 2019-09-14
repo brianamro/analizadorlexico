@@ -101,6 +101,14 @@ class State():
         
         return False
 
+    #Metodo para imprimir un arreglo de estados
+    def printArray(array):
+        array.sort()
+        print("[",end="")
+        for elem in array:
+            print(elem, end=", ")
+        print("]")
+
 #Ejemplo de como instanciar un estado
 # edo2 = state(True)
 # edo3 = state(False)
