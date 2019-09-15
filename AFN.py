@@ -335,7 +335,7 @@ class AFN():
             
 
     # La función convert_to_afd recibe un automata con transiciones 
-    # epsilon y devuelve un nuevo automata pero de la forma
+    # epsilon y devuelve elementos parar crear un Automata Finito
     # determinista
     def convert_to_afd(self, alphabet = False): 
         thisAFNAlphabet = self.get_alphabet()
@@ -374,7 +374,10 @@ class AFN():
             bandera = -1
             tableFinal.append([cont, elem, stateTo,bandera])    #Transicon -> State Ini, Caracter, StateFinal
         #Fin de Analisis S0
-        
+        #Arreglo donde se insertartan todos los nuevos estados
+        allStates = []
+        allStates.append(0) #id del Estado Inicial
+
         #Analizar los nuevos conjuntos de estados
         apunt = 1
         indexLastItem = len(stackAux)
@@ -382,14 +385,15 @@ class AFN():
         #Calcular las transciones epsilon de los otros estados
         while apunt < indexLastItem:
             #Analizar nuevos conjuntos SX
+            allStates.append(apunt)     #Insertar el "id" del nuevo estado
             for elem in alphabet:
                 arrayStatesAux = self.go_to(stackAux[apunt], elem)
                 if len(arrayStatesAux) > 0: #Conjunto NO vacio
                     
-                    if arrayStatesAux not in stackAux:
+                    if arrayStatesAux not in stackAux:  #El conjunto al que va la transcion no existe
                         stackAux.append(arrayStatesAux)
-                        stateTo = len(stackAux) - 1 #Conjunto que se acaba de crear 
-                    elif arrayStatesAux in stackAux:
+                        stateTo = len(stackAux) - 1     #Conjunto que se acaba de crear 
+                    elif arrayStatesAux in stackAux:    
                         stateTo =  stackAux.index(arrayStatesAux)
                 else:
                     stateTo = -1    #Conjunto Vacio   
@@ -402,6 +406,7 @@ class AFN():
             apunt = apunt + 1    
 
         arrayAcceptStates = []
+        
         #Buscar el token del subconjunto de estados
         for elem in stackAux:
             if self.end_state in elem:  #Estado de aceptacion del autoamta esta en el conjunto de estados
@@ -416,10 +421,9 @@ class AFN():
                             if tupla[0] == index:
                                 tupla[3] = state.token
         #Regresamos un array con 3 parametros para crear un objeto AFD
-        arrayOut = [arrayAcceptStates, tableFinal,  self.get_alphabet]
+        print("AFN")
+        arrayOut = [arrayAcceptStates, allStates, tableFinal, self.get_alphabet()]
         return arrayOut
-        # AFD_Final = AFD(0, arrayAcceptStates, tableFinal, self.get_alphabet)
-        # return AFD_Final
 
     #Funcion que convierte un a
 
@@ -443,7 +447,7 @@ def main():
     AFN1_nrB = AFN1_nrB.kleene_plus()       #[0-9]+
 
     AFN1_main = AFN1_main.concatenate(AFN1_nrB)
-    print("AFN1 (+|-)?&[0-9]+&.&[0-9]+\n")
+    # print("AFN1 (+|-)?&[0-9]+&.&[0-9]+\n")
     # print(AFN1_main)
     
     #Crear Automata (+|-)?&[0-9]+
@@ -471,7 +475,6 @@ def main():
     AFN3_num = AFN3_num.kleene_star()                       #AFN3_num = ([A-Z]|[0-9]|[a-z])*
     
     AFN3_main = AFN3_main.concatenate(AFN3_num)     #AFN3_main = ([a-z]|[A-Z]) & ([A-Z]|[0-9]|[a-z])*
-
     # print("AFN3: (a-z)(A-Z)&([a-z]|[A-Z]|[0-9])*\n")
 
     #Crear Automata +&+
@@ -480,14 +483,12 @@ def main():
     AFN4_main = AFN4_main.concatenate(AFN4_plus)
     # print("AFN4: +&+\n")
 
-
     #Crear Automata +
     AFN5_main = AFN.createBasicAutomata('+')
 
     #AUTOMATA GRANDE UNION DE LOS 5 ANTERIORES
     print("MAIN AUTOMATA\n")
     mainAFN = AFN.union_nAFN([AFN1_main, AFN2_main, AFN3_main, AFN4_main, AFN5_main], [10,20,30,40,50])
-    
     
     
 if __name__ == '__main__':

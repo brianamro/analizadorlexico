@@ -3,6 +3,8 @@ import sys
 from alphabet import Alphabet
 from regEx import RegularExp
 from AFN import AFN
+from state import State
+from transition import Transition
 
 class AFD():
     id_AFD = 0
@@ -11,11 +13,12 @@ class AFD():
     #end_state (Arreglo de enteros)
     #Alphabet (Arrelglo de: caracteres, simbolos especiales, palabras etc)
     #Token = ?
-    def __init__(self, ini_state, end_states, transitions, alphabet, token = None):
+    def __init__(self, ini_state, end_states, allStates, transitions, alphabet, token = None):
         self.id_AFD = AFD.id_AFD
         AFD.id_AFD = AFD.id_AFD +1
         self.ini_state = ini_state
         self.end_states = end_states
+        self.all_states = allStates
         self.transitions = transitions
         self.alphabet = alphabet
         self.token = token
@@ -46,12 +49,18 @@ class AFD():
         print("\n  Estado | ",end="")
         for elem in allSymbols:
             out = ""
-            if elem == Alphabet.range_num:
+            if elem == Alphabet.range_num or elem == 'N':
                 out = "[0-9]"  
-            elif elem == Alphabet.range_min:
+            elif elem == Alphabet.range_min or elem == 'a':
                 out = "[a-z]"  
-            elif elem == Alphabet.range_may:
+            elif elem == Alphabet.range_may or elem == 'A':
                 out = "[A-Z]"
+            elif elem == 'P':
+                out = "+"
+            elif elem == 'M':
+                out = "-"
+            elif elem == 'D':
+                out = "."
             else:
                 out = elem
             print("  {:>2}  |".format(out), end="")
@@ -60,10 +69,20 @@ class AFD():
         
         cont = 0
         for state in statesFrom:
-            print("    {:>2}   | ".format(state), end="")
+            #Fila de Estados
+            #Estado Inicial es de aceptacion
+            if state == self.ini_state and state in self.end_states:
+                print(" ->*{:>2}   | ".format(state), end="")
+            elif state == self.ini_state:
+                print(" -> {:>2}   | ".format(state), end="")
+            elif state in self.end_states:
+                print("  * {:>2}   | ".format(state), end="")
+            else:
+                print("    {:>2}   | ".format(state), end="")
             for symbol in allSymbols:
                 car = self.funcion_transicion(matrixFinal,state,symbol)
                 print('   {:>2}  |'.format(car),end="")
+            #Imprimir Columna de Tokens
             for tupla in matrixFinal:
                 if tupla[0] == state:
                     print(" || ",tupla[3])
@@ -77,16 +96,17 @@ class AFD():
     def createAFDexpRegular(string, token=None):
         EXPReg = RegularExp(string)
         AFNReg = EXPReg.createAFN()
-        print(AFNReg)
         AFNReg.end_state.token = token  #Asigna el token al estado de aceptacion del AFN
         arrayAFD =  AFNReg.convert_to_afd() #Devuleve un arreglo de 3 parametros para crear un AFD 
-        AFDReg = AFD(0, arrayAFD[0], arrayAFD[1], arrayAFD[2])
+        AFDReg = AFD(0, arrayAFD[0], arrayAFD[1], arrayAFD[2], arrayAFD[3])
+                    #Inicial,      Aceptacion,    Transiciones,  Alfabeto
         return AFDReg
 
-    #Funcion que une arreglo de expresiones regulares dando a cada un token diferebte
-    # Recibe arreglo de expresiones regulares, arreglo de tokenes (misma longitud)
+    #Funcion que une arreglo de expresiones regulares dando a cada un token diferente
+    # Recibe arreglo de expresiones regulares, arreglo de tokenes (misma longitud),
+    # y arreglo de caracteres (serviaran para la impresion correcta de la tabla)
     # Regresa un AFD
-    def union_nAFDs(arrayRegExps, arrayTokens, arrayLetters):
+    def createSuperAFD(arrayRegExps, arrayTokens, arrayLetters = False):
         if isinstance(arrayRegExps,list) and isinstance(arrayTokens, list):
             if len(arrayRegExps) == len(arrayTokens):
                 arrayAFNS = []
@@ -103,27 +123,169 @@ class AFD():
                 #Convertimos a AFD
                 arrayAFD = mainAFN.convert_to_afd(arrayLetters)
                 #Creamos el Objeto AFD
-                AFDReturn = AFD(0,arrayAFD[0], arrayAFD[1], arrayAFD[2])
+                AFDReturn = AFD(0, arrayAFD[0], arrayAFD[1], arrayAFD[2], arrayAFD[3])
                 return AFDReturn
         else:
             print("Error")
             sys.exit() 
-#P = '+'
-#M = '-'
-#N = '[0-9]'
-#D = '.'
-#A = '[A-z]'
-#a = '[a-z]'
-print("---- A   F   D ----")
-RegExp1 = "(P|M)?&(N+)&D&(N+)"  #(+|-)?&[0-9]+&.&[0-9]+
-RegExp2 = "(P|M)?&(N+)"         #(+!-)?&[0-9]?
-RegExp3 = "(a|A)&(a|A|N)*"      #([a-z]|[A-Z])&([a-z]|[A-Z]|[0-9])*
-RegExp4 = "P&P"                 #+&+
-RegExp5 = "P"                   #+
 
-arrayRegExp = [RegExp1, RegExp2, RegExp3, RegExp4, RegExp5]
-arrayToken = [10,20,30,40,50]
-alphabet = ['P', 'M', 'N', 'D', 'a', 'A']
+    #Metodo que verirfica si un conjunto existe en otro
+    # sin importar el orden de los elementos de dicho conjunto
+    #Recibe un conjunto de conjuntos y un conjunto de elementos
+    #Devuelve un booleano
+    def existThisSetIn(self, arraySets, set):
+        if isinstance(arraySets, list) and isinstance(set, list):
+            auxSet = set.copy()
+            cont = 0
+            for setA in arraySets:
+                if len(setA) == len(auxSet):
+                    for elemA in setA:
+                        for elemB in auxSet:
+                            if elemA == elemB:
+                                cont = cont + 1
+                                #Eliminamos el elemento que ya fue comparado
+                                auxSet.pop(auxSet.index(elemA)) 
+                                break
+            if cont == len(set):
+                return True
+            return False
+            
+    
+    
+    #Metodo que analiza la tabla de transciones del automata
+    #Recibe un estado inicial y un caracter
+    #Retorna el valor del estado al que llega (valor enter)
+    def transitionFuc(self, iniState, caracter):
+        for reng in self.transitions:
+            #reng = [iniState, caracter, endState]
+            if reng[0] == iniState and reng[1] == caracter:
+                return reng[2]
+        return -1 
 
-mainAFD = AFD.union_nAFDs(arrayRegExp, arrayToken, alphabet)
-mainAFD.printTransitionTable()
+    #Metodo que devuleve el indice del conjunto al cual pertenece un estado
+    #Recibe un arreglo de conjuntos de estados, y el estado
+    #Retorna un valor entero > 0 si se encontro, -1 si no se encontro
+    def belongTo(self, arraySets, state):
+        for set in arraySets:
+            if state in set:
+                return arraySets.index(set)
+        return -1
+
+    
+    #Metodo que minimiza la el AFD con el metodo "Conjunto Cociente"
+    def minimize(self):
+        #Atrapamos los estados de aceptacion y los no estados de aceptacion
+        conjAccept = self.end_states    #Aceptacion
+        conjNoAcpt = []
+        #Conseguir estados de no aceptacion
+        for st in self.all_states:
+            if st not in conjAccept:
+                conjNoAcpt.append(st)
+        Q_EIni = [conjAccept, conjNoAcpt]   #Q_E0
+        Q_EAux = []
+        Q_E = []
+        Q_E.extend(Q_EIni)
+        #Empezamos a Iterar todos los conjuntos de estados
+        while Q_E != Q_EAux:
+            brokenSet = False
+            #Primera Comparacion no entra en la condicion
+            if len(Q_EAux) > 0:
+                Q_E = Q_EAux.copy()
+                Q_EAux = []
+            #Comienza la interacion de conjuntos
+            for set in Q_E:     #Analizar cada uno de los conjuntos
+                for i in range(0,len(set)):
+                    for j in range(i+1, len(set)):
+                        arrayBelongA = []
+                        arrayBelongB = []
+                        for car in self.alphabet:
+                            arrayBelongA.append(self.belongTo(Q_E, self.transitionFuc(set[i], car)))
+                            arrayBelongB.append(self.belongTo(Q_E, self.transitionFuc(set[j], car)))
+                            #Si alguna de los conjutnos a los cuales van dejan de coincidir detiene el ciclo
+                            if arrayBelongA != arrayBelongB:
+                                break
+                        if arrayBelongA == arrayBelongB:
+                            newQ_E = [set[i], set[j]]
+                            excStates = []
+                            #Revisamos que el nuevo conjunto no se encuentre ya en Q_E
+                            if not self.existThisSetIn(Q_E,newQ_E):
+                                #Operacion exclusion de conjuntos
+                                oldArray = Q_E[Q_E.index(set)]
+                                for state in oldArray:
+                                    if state not in newQ_E:
+                                        excStates.append(state)
+                            brokenSet = False
+                            if len(newQ_E) > 0 and not (self.existThisSetIn(Q_EAux, newQ_E)):
+                                Q_EAux.append(newQ_E)
+                            if len(excStates) > 0 and not self.existThisSetIn(Q_EAux, excStates):
+                                Q_EAux.append(excStates)
+                                brokenSet = True
+                        if brokenSet:   #El conjunto con el que se esta operando se ha dividido
+                            indexSet = Q_E.index(set)
+                            for i in range(indexSet+1, len(Q_E)):
+                                Q_EAux.append(Q_E[i])
+                            break
+                    if brokenSet:   
+                        break
+                if brokenSet:   
+                        break
+        
+        print(Q_EAux) 
+
+    #Metodo que analiza una cadena dada de acuerdo con las transiciones del automata
+    #Recibe la cadena a analizar
+    #Retorna un arreglo con tokens
+    def analizeStr(self, string):
+        arrayTokens = []
+        actualState = self.ini_state    #Inciamos con el estado final del automata
+        for car in string: 
+            
+
+#-------------------------------------------------------------------------
+#-------------------------------------------------------------------------
+def main():
+    #P = '+'            #M = '-'
+    #N = '[0-9]'        #D = '.'
+    #A = '[A-z]'        #a = '[a-z]'
+
+    print()
+    print("---- A   F   D ----")
+    RegExp1 = "(P|M)?&(N+)&D&(N+)"  #(+|-)?&[0-9]+&.&[0-9]+
+    RegExp2 = "(P|M)?&(N+)"         #(+!-)?&[0-9]?
+    RegExp3 = "(a|A)&(a|A|N)*"      #([a-z]|[A-Z])&([a-z]|[A-Z]|[0-9])*
+    RegExp4 = "P&P"                 #+&+
+    RegExp5 = "P"                   #+
+
+    arrayRegExp = [RegExp1, RegExp2, RegExp3, RegExp4, RegExp5]
+    arrayToken = [10,20,30,40,50]
+    alphabet = ['P', 'M', 'N', 'D', 'a', 'A']
+
+    mainAFD = AFD.createSuperAFD(arrayRegExp, arrayToken, alphabet)
+    # mainAFD.printTransitionTable()
+    mainAFD.minimize()
+
+    #Pueba
+    T_01 = ['p', 'a', 'q', -1]
+    T_00 = ['p', 'b', 'p', -1]
+    T_12 = ['q', 'a', 'r', 10]
+    T_14 = ['q', 'b', 's', 11]
+    T_21 = ['r', 'a', 'q', 20]
+    T_23 = ['r', 'b', 't', 20]
+    T_34 = ['t', 'a', 's', -1]
+    T_35 = ['t', 'b', 'u', -1]
+    T_43 = ['s', 'a', 't', -1]
+    T_45 = ['s', 'b', 'u', -1]
+    T_51 = ['u', 'a', 'q', -1]
+    T_55 = ['u', 'b', 'u', 10]
+
+    AFDTrans = [T_01 ,T_00 ,T_12 ,T_14 ,T_21 ,T_23 ,T_34 ,T_35 ,T_43 ,T_45 ,T_51 ,T_55]
+
+    minAFD = AFD(0, ['q','r'], ['p','q','r','t','s','u'], AFDTrans, ['a', 'b'])
+    # minAFD.printTransitionTable()
+    # minAFD.minimize()
+
+    # varCheck = mainAFD.existThisSetIn([['q','r'], ['p','q','r','t','s','u']], ['r', 'q', 's', 'u', 't', 'p'])
+    # print(varCheck)
+
+if __name__ == '__main__':
+    main()  
