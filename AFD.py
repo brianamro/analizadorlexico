@@ -155,9 +155,22 @@ class AFD():
     #Metodo que analiza la tabla de transciones del automata
     #Recibe un estado inicial y un caracter
     #Retorna el valor del estado al que llega (valor enter)
-    def transitionFuc(self, iniState, caracter):
+    def transitionFuc(self, iniState, caracter, convert = False):
         for reng in self.transitions:
             #reng = [iniState, caracter, endState]
+            if convert:
+                if caracter.isdigit():
+                    caracter = 'N'
+                elif caracter == 'a'<=caracter<='z':
+                    caracter = 'a'
+                elif caracter == 'A'<=caracter<='A':
+                    caracter = 'A'
+                elif caracter == '+':
+                    caracter = 'P'
+                elif caracter == '-':
+                    caracter = 'M'
+                elif caracter == '.':
+                    caracter = 'D'
             if reng[0] == iniState and reng[1] == caracter:
                 return reng[2]
         return -1 
@@ -236,10 +249,45 @@ class AFD():
     #Recibe la cadena a analizar
     #Retorna un arreglo con tokens
     def analizeStr(self, string):
+        #Buscamos los tokens de cada estado
+        arrayStatesTokens = []
+        for state in self.all_states:
+            for trans in self.transitions:
+                if state == trans[0]:
+                    arrayStatesTokens.append([state, trans[len(trans)-1]])
+                    break
+        
+        self.printTransitionTable()
         arrayTokens = []
         actualState = self.ini_state    #Inciamos con el estado final del automata
-        for car in string: 
+        lastToken = -1
+        wrongString = False
+        cont = 0
+        while cont < len(string):
+            newState = self.transitionFuc(actualState, string[cont], True)
+            if  newState != -1:
+                #Buscamos el token que corresponde con ese estado
+                for elem in arrayStatesTokens:
+                    if newState == elem[0]:
+                        lastToken = elem[1]
+                        break
+                actualState = newState
+                if cont == len(string)-1:
+                    arrayTokens.append(lastToken)
+            else:
+                if lastToken != -1:
+                    actualState = self.ini_state
+                    cont = cont - 1
+                    arrayTokens.append(lastToken)
+                    lastToken = -1
+                else:
+                    wrongString = True
+            cont = cont + 1
             
+            if wrongString:
+                print("Hay un error en la cadena en la posicion: ",cont)
+                sys.exit()
+        return arrayTokens
 
 #-------------------------------------------------------------------------
 #-------------------------------------------------------------------------
@@ -262,13 +310,14 @@ def main():
 
     mainAFD = AFD.createSuperAFD(arrayRegExp, arrayToken, alphabet)
     # mainAFD.printTransitionTable()
-    mainAFD.minimize()
+    tokens = mainAFD.analizeStr("15+10.1+a++9850+++aaaa")
+    print(tokens)
 
     #Pueba
     T_01 = ['p', 'a', 'q', -1]
     T_00 = ['p', 'b', 'p', -1]
     T_12 = ['q', 'a', 'r', 10]
-    T_14 = ['q', 'b', 's', 11]
+    T_14 = ['q', 'b', 's', 10]
     T_21 = ['r', 'a', 'q', 20]
     T_23 = ['r', 'b', 't', 20]
     T_34 = ['t', 'a', 's', -1]
@@ -281,6 +330,7 @@ def main():
     AFDTrans = [T_01 ,T_00 ,T_12 ,T_14 ,T_21 ,T_23 ,T_34 ,T_35 ,T_43 ,T_45 ,T_51 ,T_55]
 
     minAFD = AFD(0, ['q','r'], ['p','q','r','t','s','u'], AFDTrans, ['a', 'b'])
+    # minAFD.analizeStr("aabaaba")
     # minAFD.printTransitionTable()
     # minAFD.minimize()
 
