@@ -12,6 +12,8 @@ class RegularExp():
         self.stringAn = stringAn
         self.apCarActual = 0
         self.stackSymbol = []
+        self.rangeAux = []
+        self.apuntStackRange = 0
 
     def error(self):
         print("Error al analizar la cadena, en el caracter: ",self.apCarActual+1, " '",self.stringAn[self.apCarActual],"'")
@@ -25,22 +27,29 @@ class RegularExp():
         if self.apCarActual < len(self.stringAn):
             car = self.stringAn[self.apCarActual]
             self.apCarActual = self.apCarActual + 1 #Incrementamos el apuntador del caracter Actual
-            if car == Alphabet.symbol_PLUS:            #'+':
+            if car == Alphabet.symbol_PLUS:            #'+': Cerradura Positiva
                 return Token.symbol_PLUS
-            elif car == Alphabet.symbol_STAR:       #'*'
+            elif car == Alphabet.symbol_STAR:       #'*': Cerradura Kleene
                 return Token.symbol_STAR
-            elif car == Alphabet.symbol_OR:         #'|'
+            elif car == Alphabet.symbol_OR:         #'|': Unir
                 return Token.symbol_OR
-            elif car == Alphabet.symbol_CONC:       #'&'
+            elif car == Alphabet.symbol_CONC:       #'&': Concatenar
                 return Token.symbol_CONC
             elif car == Alphabet.symbol_PARI:       #'('
                 return Token.symbol_PARI
             elif car == Alphabet.symbol_PARD:       #')'
                 return Token.symbol_PARD
-            elif car == Alphabet.symbol_INTER:      #'?'
+            elif car == Alphabet.symbol_INTER:      #'?': Opcional
                 return Token.symbol_INTER
-            else:                                   #a-z, A-Z, 0-9
-                return Token.symbol_ALL
+            else:#Verificamos si es simbolo o rango
+                if(self.stringAn[self.apCarActual] == '-'): #Rango
+                    rangeString = self.stringAn[self.apCarActual-1]+"-"+self.stringAn[self.apCarActual+1]
+                    print(rangeString)
+                    self.rangeAux.append(rangeString)
+                    self.apCarActual = self.apCarActual + 2
+                    return Token.symbol_RANGE
+                else:   #Caracter
+                    return Token.symbol_ALL
         else:
             return 0    #Se ha terminado de analizar la cadena
 
@@ -98,19 +107,19 @@ class RegularExp():
         token = 0
         token = self.getToken()
         if token == Token.symbol_STAR:
-            self.stackSymbol.append("*")   #Insertar en la pila simbolo de cerradura de Kleene
+            self.stackSymbol.append(Alphabet.symbol_STAR)   #Insertar en la pila simbolo de cerradura de Kleene
             if self.Cp():
                 return True
             self.error()
             return False
         elif token == Token.symbol_PLUS:
-            self.stackSymbol.append("+")   #Insertar en la pila simbolo de cerradura de Positiva
+            self.stackSymbol.append(Alphabet.symbol_PLUS)   #Insertar en la pila simbolo de cerradura de Positiva
             if self.Cp():
                 return True
             self.error()
             return False
         elif token == Token.symbol_INTER:
-            self.stackSymbol.append("?")   #Insertar en la pila simbolo de Opcional
+            self.stackSymbol.append(Alphabet.symbol_INTER)   #Insertar en la pila simbolo de Opcional
             if self.Cp():
                 return True
             self.error()
@@ -130,9 +139,15 @@ class RegularExp():
                     return True
             self.error()
             return False
-        elif token == Token.symbol_ALL:
-            self.stackSymbol.append(self.stringAn[self.apCarActual-1])   #Insertar en la pila simbolo de un caracter
+        elif token == Token.symbol_ALL: #Insertar en la pila simbolo un caracter
+            self.stackSymbol.append(self.stringAn[self.apCarActual-1])   
+            # self.stackSymbol.append("C")
             return True
+        elif token == Token.symbol_RANGE: #Insertar en la pila simbolo de un rango
+            self.stackSymbol.append(self.rangeAux[self.apuntStackRange])
+            self.apuntStackRange = self.apuntStackRange + 1
+            return True
+        
     
     #Crea un AFN apartir de la expresion Regular
     #Returna un Objeto AFN
@@ -142,7 +157,7 @@ class RegularExp():
         stackSym = self.stackSymbol #Invertir Simbolos
         stackAutomata = []
         while len(stackSym) > 0:
-            #Sacar cada elemento de pila
+            #Sacar cada elemento de pila de simbolos
             car = stackSym.pop()
             # |
             if car == Alphabet.symbol_OR:   
@@ -161,14 +176,14 @@ class RegularExp():
                 AFNConc = AFN2.concatenate(AFN1)
                 stackAutomata.append(AFNConc)  #Lo insertamos en la pila
             # ?
+            #Operacion Opcional del ultimo automata en la pila
             elif car == Alphabet.symbol_INTER:
-                #Operacion Opcional del ultimo automata en la pila
                 AFN1 = stackAutomata.pop()
                 AFNOp = AFN1.optional()
                 stackAutomata.append(AFNOp)  #Lo insertamos en la pila
             # +
+            #Operacion Cerradura Positiva del ultimo automata en la pila
             elif car == Alphabet.symbol_PLUS:
-                #Operacion Positiva del ultimo automata en la pila
                 AFN1 = stackAutomata.pop()
                 AFNPo = AFN1.kleene_plus()
                 stackAutomata.append(AFNPo)  #Lo insertamos en la pila
@@ -180,8 +195,11 @@ class RegularExp():
                 stackAutomata.append(AFNS)  #Lo insertamos en la pila
             #Crear un autamata basico con el caracter
             else:
-                AFNBasic = AFN.createBasicAutomata(car)
-                stackAutomata.append(AFNBasic)  #Insertar en la pila
+                if (len(car)>1):    #Existe un rango en la pila
+                    AFNCar = AFN.createRangeAutomata(car[0], car[2])
+                else:
+                    AFNCar = AFN.createBasicAutomata(car)
+                stackAutomata.append(AFNCar)  #Insertar en la pila
         #Devolver el automata creado
         FinalAFN = stackAutomata.pop()
         return FinalAFN
@@ -189,6 +207,7 @@ class RegularExp():
 #Ejemplo de Como Crear un AFN a partir de una expresion regular
 
 # EXP1 = RegularExp("((a&b)?)|(c&d)|((e&f)|z?)|n?|(d&.&d)")  
+# EXP1 = RegularExp("((a-z&b)?)|(c&d)|((0-5)*&(a-b))")  
 # print(EXP1.stackSymbol)
 # AFNR = EXP1.createAFN()
 # print(AFNR)

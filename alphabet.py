@@ -5,8 +5,8 @@ class Alphabet():
     range_num = 'num'   #0 - 9
     symbol_MINUS = '-'  #  -
     symbol_INTER = '?'  #  ?
-    symbol_PLUS = '+'   #  +
-    symbol_STAR = '*'   #  +
+    symbol_PLUS = '!'   #  +    Cerradrua Positiva
+    symbol_STAR = '*'   #  *    Cerradura de Kleene
     symbol_OR = '|'     #  |
     symbol_CONC = '&'   #  &
     symbol_PARI = '('   #  (
@@ -22,3 +22,4 @@ class Token():
     symbol_MINUS = 70   #  -
     symbol_INTER = 80   #  ?
     symbol_ALL = 90
+    symbol_RANGE = 100
