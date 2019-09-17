@@ -34,12 +34,12 @@ class AFD():
         return -1
 
     #Funcion que imprime la tabla de transicion del AFD
-    def printTransitionTable(self):
+    def printTransitionTable(self, convert=False):
 
         matrixFinal = self.transitions     #Conseguimos la matriz de transciones
         allSymbols = []
         statesFrom = []
-        
+        #Recorremos Matrices de Transicion del AFD
         for column in matrixFinal:
             if column[1] not in allSymbols:     #Traer Simbolos
                 allSymbols.append(column[1])  
@@ -49,18 +49,21 @@ class AFD():
         print("\n  Estado | ",end="")
         for elem in allSymbols:
             out = ""
-            if elem == Alphabet.range_num or elem == 'N':
-                out = "[0-9]"  
-            elif elem == Alphabet.range_min or elem == 'a':
-                out = "[a-z]"  
-            elif elem == Alphabet.range_may or elem == 'A':
-                out = "[A-Z]"
-            elif elem == 'P':
-                out = "+"
-            elif elem == 'M':
-                out = "-"
-            elif elem == 'D':
-                out = "."
+            if convert:
+                if elem == Alphabet.range_num or elem == 'N':
+                    out = "[0-9]"  
+                elif elem == Alphabet.range_min or elem == 'a':
+                    out = "[a-z]"  
+                elif elem == Alphabet.range_may or elem == 'A':
+                    out = "[A-Z]"
+                elif elem == 'P':
+                    out = "+"
+                elif elem == 'M':
+                    out = "-"
+                elif elem == 'D':
+                    out = "."
+                else:
+                    out = elem
             else:
                 out = elem
             print("  {:>2}  |".format(out), end="")
@@ -81,11 +84,11 @@ class AFD():
                 print("    {:>2}   | ".format(state), end="")
             for symbol in allSymbols:
                 car = self.funcion_transicion(matrixFinal,state,symbol)
-                print('   {:>2}  |'.format(car),end="")
+                print('  {:>2}  |'.format(car),end="")
             #Imprimir Columna de Tokens
             for tupla in matrixFinal:
                 if tupla[0] == state:
-                    print(" || ",tupla[3])
+                    print("|  ",tupla[3]," |")
                     break
             cont = cont + 1
 
@@ -93,8 +96,8 @@ class AFD():
     #Funcion que genera un AFD apartir una de una expresion regular 
     # ademas de agregar un token dado, en su estado de aceptacion
     #Regresa un objeto AFD
-    def createAFDexpRegular(string, token=None):
-        EXPReg = RegularExp(string)
+    def createAFDexpRegular(regularExp, token=1):
+        EXPReg = RegularExp(regularExp)
         AFNReg = EXPReg.createAFN()
         AFNReg.end_state.token = token  #Asigna el token al estado de aceptacion del AFN
         arrayAFD =  AFNReg.convert_to_afd() #Devuleve un arreglo de 3 parametros para crear un AFD 
@@ -115,12 +118,13 @@ class AFD():
                     #Creamos el AFN con la expresion regular
                     RegExpAux = RegularExp(arrayRegExps[i])
                     AFNRegExpAux = RegExpAux.createAFN()
+                    print(AFNRegExpAux)
                     #Lo insertamos en la lista de AFN's
                     arrayAFNS.append(AFNRegExpAux)
-                # arrayAFNS.reverse()
                 #Llamamos al metodo de union de AFN's
                 mainAFN = AFN.union_nAFN(arrayAFNS, arrayTokens)
                 #Convertimos a AFD
+                #Pasamos el alfabeto en el cual se mostaran la tabla de transiciones
                 arrayAFD = mainAFN.convert_to_afd(arrayLetters)
                 #Creamos el Objeto AFD
                 AFDReturn = AFD(0, arrayAFD[0], arrayAFD[1], arrayAFD[2], arrayAFD[3])
@@ -150,8 +154,6 @@ class AFD():
                 return True
             return False
             
-    
-    
     #Metodo que analiza la tabla de transciones del automata
     #Recibe un estado inicial y un caracter
     #Retorna el valor del estado al que llega (valor enter)
@@ -248,7 +250,7 @@ class AFD():
     #Metodo que analiza una cadena dada de acuerdo con las transiciones del automata
     #Recibe la cadena a analizar
     #Retorna un arreglo con tokens
-    def analizeStr(self, string):
+    def analizeStr(self, string, convert=False):
         #Buscamos los tokens de cada estado
         arrayStatesTokens = []
         for state in self.all_states:
@@ -256,15 +258,13 @@ class AFD():
                 if state == trans[0]:
                     arrayStatesTokens.append([state, trans[len(trans)-1]])
                     break
-        
-        self.printTransitionTable()
         arrayTokens = []
         actualState = self.ini_state    #Inciamos con el estado final del automata
         lastToken = -1
         wrongString = False
         cont = 0
         while cont < len(string):
-            newState = self.transitionFuc(actualState, string[cont], True)
+            newState = self.transitionFuc(actualState, string[cont], convert)
             if  newState != -1:
                 #Buscamos el token que corresponde con ese estado
                 for elem in arrayStatesTokens:
@@ -275,7 +275,8 @@ class AFD():
                 if cont == len(string)-1:
                     arrayTokens.append(lastToken)
             else:
-                if lastToken != -1:
+                if lastToken != -1:     #Ctrl -z
+                    # wrongString = True
                     actualState = self.ini_state
                     cont = cont - 1
                     arrayTokens.append(lastToken)
@@ -285,7 +286,7 @@ class AFD():
             cont = cont + 1
             
             if wrongString:
-                print("Hay un error en la cadena en la posicion: ",cont)
+                print("Hay un error en la cadena: '"+string+"' en la posicion [",cont,"]")
                 sys.exit()
         return arrayTokens
 
@@ -298,38 +299,28 @@ def main():
 
     print()
     print("---- A   F   D ----")
-    RegExp1 = "(P|M)?&(N+)&D&(N+)"  #(+|-)?&[0-9]+&.&[0-9]+
-    RegExp2 = "(P|M)?&(N+)"         #(+!-)?&[0-9]?
-    RegExp3 = "(a|A)&(a|A|N)*"      #([a-z]|[A-Z])&([a-z]|[A-Z]|[0-9])*
-    RegExp4 = "P&P"                 #+&+
-    RegExp5 = "P"                   #+
+    # RegExp1 = "(P|M)?&(N+)&D&(N+)"  #(+|-)?&[0-9]+&.&[0-9]+
+    # RegExp2 = "(P|M)?&(N+)"         #(+!-)?&[0-9]?
+    # RegExp3 = "(a|A)&(a|A|N)*"      #([a-z]|[A-Z])&([a-z]|[A-Z]|[0-9])*
+    # RegExp4 = "P&P"                 #+&+
+    # RegExp5 = "P"                   #+
 
-    arrayRegExp = [RegExp1, RegExp2, RegExp3, RegExp4, RegExp5]
-    arrayToken = [10,20,30,40,50]
-    alphabet = ['P', 'M', 'N', 'D', 'a', 'A']
+    # arrayRegExp = [RegExp1, RegExp2, RegExp3, RegExp4, RegExp5]
+    # arrayToken = [10,20,30,40,50]
+    # alphabet = ['P', 'M', 'N', 'D', 'a', 'A']
 
-    mainAFD = AFD.createSuperAFD(arrayRegExp, arrayToken, alphabet)
-    # mainAFD.printTransitionTable()
-    tokens = mainAFD.analizeStr("15+10.1+a++9850+++aaaa")
-    print(tokens)
+    # mainAFD = AFD.createSuperAFD(arrayRegExp, arrayToken, alphabet)
+    # # mainAFD.printTransitionTable()
+    # tokens = mainAFD.analizeStr("15+10....1+a++9850+++aaaa")
+    # print(tokens)
 
-    #Pueba
-    T_01 = ['p', 'a', 'q', -1]
-    T_00 = ['p', 'b', 'p', -1]
-    T_12 = ['q', 'a', 'r', 10]
-    T_14 = ['q', 'b', 's', 10]
-    T_21 = ['r', 'a', 'q', 20]
-    T_23 = ['r', 'b', 't', 20]
-    T_34 = ['t', 'a', 's', -1]
-    T_35 = ['t', 'b', 'u', -1]
-    T_43 = ['s', 'a', 't', -1]
-    T_45 = ['s', 'b', 'u', -1]
-    T_51 = ['u', 'a', 'q', -1]
-    T_55 = ['u', 'b', 'u', 10]
-
-    AFDTrans = [T_01 ,T_00 ,T_12 ,T_14 ,T_21 ,T_23 ,T_34 ,T_35 ,T_43 ,T_45 ,T_51 ,T_55]
-
-    minAFD = AFD(0, ['q','r'], ['p','q','r','t','s','u'], AFDTrans, ['a', 'b'])
+    RegExpTest = "((m-o&b)+)|(c&d)|((0-2)*&(a-b))"
+    RegFloat = "(+|-)?&(0-3)!&.&(0-3)!"
+    # AFDTest = AFD.createAFDexpRegular(RegExpTest, 10)
+    AFDFloat = AFD.createSuperAFD([RegFloat], [20])
+    AFDFloat.printTransitionTable()
+    TokenTest =AFDFloat.analizeStr("-2.231")
+    print(TokenTest)
     # minAFD.analizeStr("aabaaba")
     # minAFD.printTransitionTable()
     # minAFD.minimize()
