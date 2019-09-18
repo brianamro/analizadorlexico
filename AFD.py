@@ -118,7 +118,6 @@ class AFD():
                     #Creamos el AFN con la expresion regular
                     RegExpAux = RegularExp(arrayRegExps[i])
                     AFNRegExpAux = RegExpAux.createAFN()
-                    print(AFNRegExpAux)
                     #Lo insertamos en la lista de AFN's
                     arrayAFNS.append(AFNRegExpAux)
                 #Llamamos al metodo de union de AFN's
@@ -315,11 +314,11 @@ def main():
     # print(tokens)
 
     RegExpTest = "((m-o&b)+)|(c&d)|((0-2)*&(a-b))"
-    RegFloat = "(+|-)?&(0-3)!&.&(0-3)!"
+    RegFloat = "(+|-)?&(0-5)!&.&(0-3)!"
     # AFDTest = AFD.createAFDexpRegular(RegExpTest, 10)
     AFDFloat = AFD.createSuperAFD([RegFloat], [20])
-    AFDFloat.printTransitionTable()
-    TokenTest =AFDFloat.analizeStr("-2.231")
+    # AFDFloat.printTransitionTable()
+    TokenTest =AFDFloat.analizeStr("-5432132.231+125.122223")
     print(TokenTest)
     # minAFD.analizeStr("aabaaba")
     # minAFD.printTransitionTable()
