@@ -436,6 +436,10 @@ def main():
     # RegExpTest = "((m-o&b)+)|(c&d)|((0-2)*&(a-b))"
     RegFloat1 = "(+|-)?&(0-9)!&.&(0-9)!"
     RegFloat2 = "(+|-)?&(a-c)!&.&(0-9)!"
+    #RegExpTest = "((m-o&b)+)|(c&d)|((0-2)*&(a-b))"
+    RegFloat = "(+|-)?&(0-3)!&.&(0-3)!"
+    RegExpTest = "((m-o&b)+)|(c&d)|((0-2)*&(a-b))"
+    RegFloat = "(+|-)?&(0-5)!&.&(0-3)!"
     # AFDTest = AFD.createAFDexpRegular(RegExpTest, 10)
     AFDFloat = AFD.createSuperAFD([RegFloat1, RegFloat2], [10,20])
     # print(AFDFloat.printTransitionTable())
