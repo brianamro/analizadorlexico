@@ -44,7 +44,6 @@ class RegularExp():
             else:#Verificamos si es simbolo o rango
                 if(self.stringAn[self.apCarActual] == '-'): #Rango
                     rangeString = self.stringAn[self.apCarActual-1]+"-"+self.stringAn[self.apCarActual+1]
-                    print(rangeString)
                     self.rangeAux.append(rangeString)
                     self.apCarActual = self.apCarActual + 2
                     return Token.symbol_RANGE

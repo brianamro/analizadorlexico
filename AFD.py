@@ -13,7 +13,7 @@ class AFD():
     #end_state (Arreglo de enteros)
     #Alphabet (Arrelglo de: caracteres, simbolos especiales, palabras etc)
     #Token = ?
-    def __init__(self, ini_state, end_states, allStates, transitions, alphabet, token = None):
+    def __init__(self, ini_state, end_states, allStates, transitions, alphabet, arrayRegExp = None, arrayTokens = None):
         self.id_AFD = AFD.id_AFD
         AFD.id_AFD = AFD.id_AFD +1
         self.ini_state = ini_state
@@ -21,11 +21,94 @@ class AFD():
         self.all_states = allStates
         self.transitions = transitions
         self.alphabet = alphabet
-        self.token = token
+        self.arrayRegExp = arrayRegExp
+        self.arrayTokens = arrayTokens
         # Atributos para anailizar cadenas
         self.apCarActual = 0
         self.thisString = ""
+    #Sobrecarga de metodo imprimir
 
+    def printMinimizeTable(self, alphabet=[]):
+        #Convertir rangos a "Mascaras"
+        arrayAllCar = [] #Insertar nuevas mascaras
+        arrayAllRegExp = [] #Se guardaran las expresiones regulares
+        for regExp in self.arrayRegExp:
+            stringRegExp = ""
+            i = 0
+            #Analizamos la expresion regular
+            while i < len(regExp):
+                if regExp[i] == Alphabet.symbol_PLUS:            #'+': Cerradura Positiva
+                    stringRegExp += regExp[i]
+                elif regExp[i] == Alphabet.symbol_STAR:       #'*': Cerradura Kleene
+                    stringRegExp += regExp[i]
+                elif regExp[i] == Alphabet.symbol_OR:         #'|': Unir
+                    stringRegExp += regExp[i]
+                elif regExp[i] == Alphabet.symbol_CONC:       #'&': Concatenar
+                    stringRegExp += regExp[i]
+                elif regExp[i] == Alphabet.symbol_PARI:       #'('
+                    stringRegExp += regExp[i]
+                elif regExp[i] == Alphabet.symbol_PARD:       #')'
+                    stringRegExp += regExp[i]
+                elif regExp[i] == Alphabet.symbol_INTER:      #'?': Opcional
+                    stringRegExp += regExp[i]
+                else:#Verificamos si es simbolo o rango
+                    stringRangeCarAux = ""
+                    stringAux = ""
+                    if(regExp[i+1] == '-'): #Rango
+                        rangeString = regExp[i]+"-"+regExp[i+2]
+                        stringRangeCarAux = rangeString
+                        i = i + 2
+                    else:   #Caracter
+                        stringRangeCarAux = regExp[i]
+                    #Verificar si ya se ha insertado antes en la lista
+                    if stringRangeCarAux not in arrayAllCar:
+                        arrayAllCar.append(stringRangeCarAux)
+                        stringAux = "{}".format(len(arrayAllCar)-1)
+                    else:
+                        indexAux =arrayAllCar.index(stringRangeCarAux)
+                        stringAux = "{}".format(indexAux)
+                    #Insertar el indice corespondiendente a la expresion regular
+                    stringRegExp += stringAux
+                i += 1
+            arrayAllRegExp.append(stringRegExp)
+        #Las expresiones con rango ya fueron convertidas
+        #Ahora creamos los AFNS con esas expresiones
+        arrayAFNS = []
+        for i in range(0,len(self.arrayTokens)):
+            #Creamos el AFN con la expresion regular
+            RegExpAux = RegularExp(arrayAllRegExp[i])
+            AFNRegExpAux = RegExpAux.createAFN()
+            #Lo insertamos en la lista de AFN's
+            arrayAFNS.append(AFNRegExpAux)
+        #Llamamos al metodo de union de AFN's
+        mainAFN = AFN.union_nAFN(arrayAFNS, self.arrayTokens)
+        #Verificamos el alfabeto dado
+        finalAlphabet = []
+        arrayAFD = []
+        if len(alphabet) == len(arrayAllCar):
+            cont = 0
+            for elemAl in alphabet:
+                indexAux = arrayAllCar.index(elemAl)
+                stringNum = '{}'.format(indexAux)
+                finalAlphabet.append(stringNum)
+                cont = cont + 1
+            if cont == len(arrayAllCar):    #Alfabeto introducido es valido
+                arrayAFD = mainAFN.convert_to_afd(finalAlphabet)  #Metodo de la clase AFN
+            else:
+                print("Error el la funcion minimizeTable, verifica el alfabeto")
+                sys.exit()
+        elif len(alphabet) == 0:  #Alfabeto por Default
+            arrayAFD = mainAFN.convert_to_afd()  #Metodo de la clase AFN
+        else:
+            print("Error el la funcion minimizeTable, verifica el alfabeto")
+            sys.exit()
+
+        #Convertimos a AFD
+        #Pasamos el alfabeto en el cual se mostaran la tabla de transiciones
+        
+        outAFD = AFD(0, arrayAFD[0], arrayAFD[1], arrayAFD[2], arrayAFD[3])
+
+        return outAFD.printTransitionTable(False, True, arrayAllCar)
     #Funcion de Transcion dado el estado del cual se parte y el simbolo 
     def funcion_transicion(self,matrix, state_from, symbol):
         for column in matrix:
@@ -34,11 +117,11 @@ class AFD():
         return -1
 
     #Funcion que imprime la tabla de transicion del AFD
-    def printTransitionTable(self, convert=False):
-
+    def printTransitionTable(self, convert=False, interpret=False, specialAlphabet=[]):
         matrixFinal = self.transitions     #Conseguimos la matriz de transciones
         allSymbols = []
         statesFrom = []
+        stringOut = ""
         #Recorremos Matrices de Transicion del AFD
         for column in matrixFinal:
             if column[1] not in allSymbols:     #Traer Simbolos
@@ -46,7 +129,8 @@ class AFD():
             if column[0] not in statesFrom:
                 statesFrom.append(column[0])    #Traes Estados Inciales
         #Recorrer Arreglo de simbolos
-        print("\n  Estado | ",end="")
+        # print("\n  Estado | ",end="")
+        stringOut = stringOut +"\n  Estado  | "
         for elem in allSymbols:
             out = ""
             if convert:
@@ -64,33 +148,52 @@ class AFD():
                     out = "."
                 else:
                     out = elem
+            elif interpret: #Metodo para interpterat un alfabeto
+                indexAux = int(elem,10)
+                out = specialAlphabet[indexAux]
             else:
                 out = elem
-            print("  {:>2}  |".format(out), end="")
-        print("| token |", end="")
-        print("\n")
+            # print("  {:>2}  |".format(out), end="")
+            stringOut = stringOut +"  {:>3}  |".format(out)
+        # print("| token |", end="")
+        stringOut = stringOut +"| token |\n"
+        # print("\n")
         
         cont = 0
         for state in statesFrom:
             #Fila de Estados
             #Estado Inicial es de aceptacion
             if state == self.ini_state and state in self.end_states:
-                print(" ->*{:>2}   | ".format(state), end="")
+                # print(" ->*{:>3}   | ".format(state), end="")
+                stringAux = " ->*{:>3}   | ".format(state)
+                stringOut += stringAux
             elif state == self.ini_state:
-                print(" -> {:>2}   | ".format(state), end="")
+                # print(" -> {:>3}   | ".format(state), end="")
+                stringAux = " -> {:>3}   | ".format(state)
+                stringOut += stringAux
             elif state in self.end_states:
-                print("  * {:>2}   | ".format(state), end="")
+                # print("  * {:>3}   | ".format(state), end="")
+                stringAux = "  * {:>3}   | ".format(state)
+                stringOut += stringAux
             else:
-                print("    {:>2}   | ".format(state), end="")
+                # print("    {:>3}   | ".format(state), end="")
+                stringAux = "    {:>3}   | ".format(state)
+                stringOut += stringAux
             for symbol in allSymbols:
                 car = self.funcion_transicion(matrixFinal,state,symbol)
-                print('  {:>2}  |'.format(car),end="")
+                # print('  {:>3}  |'.format(car),end="")
+                stringAux = "  {:>3}  |".format(state)
+                stringOut += stringAux
             #Imprimir Columna de Tokens
             for tupla in matrixFinal:
                 if tupla[0] == state:
-                    print("|  ",tupla[3]," |")
+                    # print("|  ",tupla[3]," |")
+                    car = "{}".format(tupla[3])
+                    stringOut += "|   "+car+"  |\n"
                     break
             cont = cont + 1
+            
+        return stringOut
 
 
     #Funcion que genera un AFD apartir una de una expresion regular 
@@ -113,8 +216,11 @@ class AFD():
         if isinstance(arrayRegExps,list) and isinstance(arrayTokens, list):
             if len(arrayRegExps) == len(arrayTokens):
                 arrayAFNS = []
+                arraySaveRegExp = []
                 #Se crean los AFNS a partir de la expreison Regular
                 for i in range(0,len(arrayTokens)):
+                    #Insertamos las expresiones regualres en una lista
+                    arraySaveRegExp.append(arrayRegExps[i])
                     #Creamos el AFN con la expresion regular
                     RegExpAux = RegularExp(arrayRegExps[i])
                     AFNRegExpAux = RegExpAux.createAFN()
@@ -126,7 +232,8 @@ class AFD():
                 #Pasamos el alfabeto en el cual se mostaran la tabla de transiciones
                 arrayAFD = mainAFN.convert_to_afd(arrayLetters)
                 #Creamos el Objeto AFD
-                AFDReturn = AFD(0, arrayAFD[0], arrayAFD[1], arrayAFD[2], arrayAFD[3])
+                arrayTok = arrayTokens.copy()
+                AFDReturn = AFD(0, arrayAFD[0], arrayAFD[1], arrayAFD[2], arrayAFD[3], arraySaveRegExp, arrayTok)
                 return AFDReturn
         else:
             print("Error")
@@ -258,6 +365,8 @@ class AFD():
                     arrayStatesTokens.append([state, trans[len(trans)-1]])
                     break
         arrayTokens = []
+        arrayLex = []
+        stringLex = ""
         actualState = self.ini_state    #Inciamos con el estado final del automata
         lastToken = -1
         wrongString = False
@@ -269,16 +378,21 @@ class AFD():
                 for elem in arrayStatesTokens:
                     if newState == elem[0]:
                         lastToken = elem[1]
+                        stringLex = stringLex +string[cont]
                         break
                 actualState = newState
+                #Ultimo Lexema Leido
                 if cont == len(string)-1:
                     arrayTokens.append(lastToken)
+                    arrayTokens.append(lastToken)
+                    arrayLex.append(stringLex)  #Caputarmos el Lexema Leido
             else:
                 if lastToken != -1:     #Ctrl -z
-                    # wrongString = True
                     actualState = self.ini_state
                     cont = cont - 1
                     arrayTokens.append(lastToken)
+                    arrayLex.append(stringLex)  #Caputarmos el Lexema Leido
+                    stringLex = ""  #Reiniciamos el auxiliar de lexema
                     lastToken = -1
                 else:
                     wrongString = True
@@ -287,10 +401,16 @@ class AFD():
             if wrongString:
                 print("Hay un error en la cadena: '"+string+"' en la posicion [",cont,"]")
                 sys.exit()
-        return arrayTokens
+        #creamos el array de salida
+        arrayOut = []
+        for i in range(0,len(arrayLex)):
+            arrayOut.append([arrayTokens[i],arrayLex[i]])
+
+        return arrayOut
 
 #-------------------------------------------------------------------------
 #-------------------------------------------------------------------------
+# def afd_main():
 def main():
     #P = '+'            #M = '-'
     #N = '[0-9]'        #D = '.'
@@ -313,19 +433,17 @@ def main():
     # tokens = mainAFD.analizeStr("15+10....1+a++9850+++aaaa")
     # print(tokens)
 
-    RegExpTest = "((m-o&b)+)|(c&d)|((0-2)*&(a-b))"
-    RegFloat = "(+|-)?&(0-5)!&.&(0-3)!"
+    # RegExpTest = "((m-o&b)+)|(c&d)|((0-2)*&(a-b))"
+    RegFloat1 = "(+|-)?&(0-9)!&.&(0-9)!"
+    RegFloat2 = "(+|-)?&(a-c)!&.&(0-9)!"
     # AFDTest = AFD.createAFDexpRegular(RegExpTest, 10)
-    AFDFloat = AFD.createSuperAFD([RegFloat], [20])
-    # AFDFloat.printTransitionTable()
-    TokenTest =AFDFloat.analizeStr("-5432132.231+125.122223")
+    AFDFloat = AFD.createSuperAFD([RegFloat1, RegFloat2], [10,20])
+    # print(AFDFloat.printTransitionTable())
+    # print(AFDFloat.printMinimizeTable(['+','-','0-9','a-c','.']))
+    TokenTest =AFDFloat.analizeStr("-5432132.2-12501232789.122+aacba.3212")
     print(TokenTest)
-    # minAFD.analizeStr("aabaaba")
-    # minAFD.printTransitionTable()
-    # minAFD.minimize()
 
-    # varCheck = mainAFD.existThisSetIn([['q','r'], ['p','q','r','t','s','u']], ['r', 'q', 's', 'u', 't', 'p'])
-    # print(varCheck)
-
+# if __name__ == '__afd_main__':
+#     afd_main()  
 if __name__ == '__main__':
-    main()  
+    main()
