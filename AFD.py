@@ -292,7 +292,7 @@ class AFD():
 
 #-------------------------------------------------------------------------
 #-------------------------------------------------------------------------
-def main():
+def afd_main():
     #P = '+'            #M = '-'
     #N = '[0-9]'        #D = '.'
     #A = '[A-z]'        #a = '[a-z]'
@@ -314,7 +314,7 @@ def main():
     # tokens = mainAFD.analizeStr("15+10....1+a++9850+++aaaa")
     # print(tokens)
 
-    RegExpTest = "((m-o&b)+)|(c&d)|((0-2)*&(a-b))"
+    #RegExpTest = "((m-o&b)+)|(c&d)|((0-2)*&(a-b))"
     RegFloat = "(+|-)?&(0-3)!&.&(0-3)!"
     # AFDTest = AFD.createAFDexpRegular(RegExpTest, 10)
     AFDFloat = AFD.createSuperAFD([RegFloat], [20])
@@ -328,5 +328,5 @@ def main():
     # varCheck = mainAFD.existThisSetIn([['q','r'], ['p','q','r','t','s','u']], ['r', 'q', 's', 'u', 't', 'p'])
     # print(varCheck)
 
-if __name__ == '__main__':
-    main()  
+if __name__ == '__afd_main__':
+    afd_main()  

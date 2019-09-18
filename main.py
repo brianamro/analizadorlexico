@@ -1,12 +1,29 @@
 from AFN import AFN
 from AFN import Alphabet
+from AFD import AFD
 import pickle
-def main():
-    automata_stack = []
+import os
+
+
+# EN esta variable se guardarán todas las expresiones 
+# regulares
+regex_stack = []
+# En esta variable se guardarán los token asignados a cada
+# AFD 
+tokens_stack = []
+# En esta variable se guardarán los AFD para anlisis
+# léxico a partir de un arreglo de expresiones regulares
+afd_stack = []
+# En esta variable se guardarán todos los automatas no deterministas
+# que vayamos creando
+automata_stack = []
+# Esta función hará el papel del menú para crear automatas 
+def menu_automata():
+    os.system('cls||clear')   
     opcion = True
     while opcion == True:
         print()
-        print("------------- BIENVENIDO------------------")
+        print("------------- AUTOMATAS ------------------")
         print("1. Crear autómata básico")
         print("2. Cerradura de Kleen de un automata (*)")
         print("3. Cerradura positiva de un automata (+)")
@@ -15,13 +32,14 @@ def main():
         print("6. Concatenar automatas")
         print("7. Guardar automata")
         print("8. Cargar automata")
-        print("9. Salir")
+        print("9. Salir al menú principal")
         entrada = input("Ingresa una opción: ")
         if entrada.isdigit():
             opc = int(entrada)
             print()
             if opc == 9:
-                print("Saliendo del automata...")
+                print("Saliendo de Crear automatas...")
+                main()
                 opcion = False
             else:
                 if opc == 1:
@@ -134,6 +152,74 @@ def main():
             print("ERROR: entrada invalida") 
             opcion = True           
 
+def menu_lex():
+    print("-- ANÁLISIS LÉXICO ---")
+    print("1. Añadir una expresión regular")
+    print("2. Crear un analizador léxico a partir de las")
+    print("   expresiones regulares introducidas")
+    print("3. Analizar una cadena con un analizador léxico")
+    print("4. Regresar al menu principal")
+    OPC = input("Ingresa una opción: ")
+    os.system('cls||clear')
+    if OPC.isdigit():
+        if int(OPC) == 1:   
+            regexAux = input("Ingresa la expresión regular: ")
+            if regexAux not in regex_stack:
+                regex_stack.append(regexAux)
+                print("Expresión regular agregada")
+                tokenAux = input("Ingresa token")
+                if tokenAux.isdigit():
+                    tokens_stack.append(int(tokenAux))
+                    print("Token agregado")
+                elif tokenAux in tokens_stack:
+                    print("Token ya existente.")
+                else:
+                    print("Token no valido")
+            else: 
+                print("Expresión ya asignada")
+            menu_lex()
+        elif int(OPC) == 2:
+            if len(regex_stack) > 0:
+                print("")
+                #os.system('cls||clear')
+                print("... Creando analizador léxico ...")
+                superAFDaux = AFD.createSuperAFD(regex_stack,tokens_stack)
+                afd_stack.append(superAFDaux)
+                superAFDaux.printTransitionTable()
+                print("AFD creado correctamente!")
+                afd_stack.clear()
+            else:
+                print("No hay suficientes expresiones regulares")
+            menu_lex()
+    else:
+        print("Ingresa una opción válida")
+        menu_lex()
+
+
+def main():
+    print("---------------------------------------------------")
+    print("")
+    print("------ BIENVENIDO AL ANALIZADOR SINTÁCTICO --------")
+    print("")
+    print("---------------------------------------------------")
+    print("")
+    print("1. Crear un automata a partir de automatas básicos")
+    print("2. Análisis sintáctico dadas expresiones regulares")
+    opcion = input("Ingresa una opción: ")
+    if opcion.isdigit():
+        os.system('cls||clear')   
+        if int(opcion) == 1:
+            menu_automata()
+        elif int(opcion) == 2:
+            menu_lex()
+        else:
+            print("Ingrese una opción valida")
+            main()
+    else:
+        print("Ingrese una opción valida")
+        main()
+    
+    
 
             
 
