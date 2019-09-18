@@ -45,11 +45,11 @@ def menu_automata():
                 if opc == 1:
                     print()
                     print("  Creando automata básico..")
-                    caracter =input("Ingresa el caracter: ")
+                    caracter = input("Ingresa el caracter: ")
                     nombre = "AFN_"+caracter
                     nombre = AFN.createBasicAutomata(caracter)
                     automata_stack.append(nombre)
-                    print("Indice en la pila: ",automata_stack.index(nombre))
+                    print("ID de automata: ",automata_stack.index(nombre))
                     #print(nombre)
                     opcion = True
                 elif opc == 2:
@@ -145,6 +145,16 @@ def menu_automata():
                             print("Entrada no valida")
                     else:
                         print("ERROR: No hay automatas")
+                elif opc == 8:
+                    id_aux = input("Ingresa el ID del autómata a imprimir")
+                    if id_aux.isdigit():
+                        if id_aux < len(automata_stack):
+                            print(automata_stack[id_aux])
+                    else:
+                        print("ERROR: entrada no valida")
+                        opcion = True
+                            
+
                 else:
                     print("ERROR: opción no valida")
                     opcion = True
@@ -167,7 +177,7 @@ def menu_lex():
             if regexAux not in regex_stack:
                 regex_stack.append(regexAux)
                 print("Expresión regular agregada")
-                tokenAux = input("Ingresa token")
+                tokenAux = input("Ingresa token: ")
                 if tokenAux.isdigit():
                     tokens_stack.append(int(tokenAux))
                     print("Token agregado")
@@ -181,15 +191,28 @@ def menu_lex():
         elif int(OPC) == 2:
             if len(regex_stack) > 0:
                 print("")
-                #os.system('cls||clear')
+                os.system('cls||clear')
                 print("... Creando analizador léxico ...")
                 superAFDaux = AFD.createSuperAFD(regex_stack,tokens_stack)
                 afd_stack.append(superAFDaux)
                 superAFDaux.printTransitionTable()
                 print("AFD creado correctamente!")
-                afd_stack.clear()
+                print(f"AFD ID: {afd_stack.index(superAFDaux)}")
+                regex_stack.clear()
             else:
                 print("No hay suficientes expresiones regulares")
+            menu_lex()
+        elif int(OPC) == 3:
+            if len(afd_stack) > 0:
+                id_aux = input("Ingresa el ID del AFD a usar: ")
+                if int(id_aux) < len(afd_stack):
+                    cadena = input("Ingresa una cadena: ")
+                    tokenTest = afd_stack[int(id_aux)].analizeStr(cadena)
+                    print(tokenTest)
+                else:
+                    print("Error: ese automata no existe")
+            else:
+                print("ERROR: no hay automatas")
             menu_lex()
     else:
         print("Ingresa una opción válida")
