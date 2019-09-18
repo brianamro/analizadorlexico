@@ -214,6 +214,9 @@ def menu_lex():
             else:
                 print("ERROR: no hay automatas")
             menu_lex()
+        elif int(OPC) == 4:
+            main()
+
     else:
         print("Ingresa una opción válida")
         menu_lex()
