@@ -47,6 +47,11 @@ class RegularExp():
                     self.rangeAux.append(rangeString)
                     self.apCarActual = self.apCarActual + 2
                     return Token.symbol_RANGE
+                elif (car == '\\'): #Caracter es igual a simbolos especiales
+                    if (self.stringAn[self.apCarActual] == Alphabet.symbol_PLUS) or (self.stringAn[self.apCarActual] == Alphabet.symbol_STAR) or (self.stringAn[self.apCarActual] == Alphabet.symbol_OR) or (self.stringAn[self.apCarActual] == Alphabet.symbol_CONC) or (self.stringAn[self.apCarActual] == Alphabet.symbol_PARI) or (self.stringAn[self.apCarActual] == Alphabet.symbol_PARD) or (self.stringAn[self.apCarActual] == Alphabet.symbol_INTER):
+                        rangeString = car+self.stringAn[self.apCarActual]
+                        self.rangeAux.append(rangeString)    
+                        return Token.symbol_RANGE
                 else:   #Caracter
                     return Token.symbol_ALL
         else:
@@ -140,7 +145,6 @@ class RegularExp():
             return False
         elif token == Token.symbol_ALL: #Insertar en la pila simbolo un caracter
             self.stackSymbol.append(self.stringAn[self.apCarActual-1])   
-            # self.stackSymbol.append("C")
             return True
         elif token == Token.symbol_RANGE: #Insertar en la pila simbolo de un rango
             self.stackSymbol.append(self.rangeAux[self.apuntStackRange])
@@ -195,7 +199,10 @@ class RegularExp():
             #Crear un autamata basico con el caracter
             else:
                 if (len(car)>1):    #Existe un rango en la pila
-                    AFNCar = AFN.createRangeAutomata(car[0], car[2])
+                    if car[1] == '-':   #Creamos automtat de rango
+                        AFNCar = AFN.createRangeAutomata(car[0], car[2])
+                    else: #Caracter especial
+                        AFNCar = AFN.createBasicAutomata(car[1])
                 else:
                     AFNCar = AFN.createBasicAutomata(car)
                 stackAutomata.append(AFNCar)  #Insertar en la pila

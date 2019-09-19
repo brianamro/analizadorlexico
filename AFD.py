@@ -29,7 +29,7 @@ class AFD():
     #Sobrecarga de metodo imprimir
 
     def printMinimizeTable(self, alphabet=[]):
-        #Convertir rangos a "Mascaras"
+        #Sobreescribimos las expresiones regulares
         arrayAllCar = [] #Insertar nuevas mascaras
         arrayAllRegExp = [] #Se guardaran las expresiones regulares
         for regExp in self.arrayRegExp:
@@ -58,6 +58,8 @@ class AFD():
                         rangeString = regExp[i]+"-"+regExp[i+2]
                         stringRangeCarAux = rangeString
                         i = i + 2
+                    elif (regExp[i] == '\\'): #Caracter especial
+                        stringRangeCarAux = regExp[i+1]
                     else:   #Caracter
                         stringRangeCarAux = regExp[i]
                     #Verificar si ya se ha insertado antes en la lista
@@ -105,11 +107,10 @@ class AFD():
 
         #Convertimos a AFD
         #Pasamos el alfabeto en el cual se mostaran la tabla de transiciones
-        
         outAFD = AFD(0, arrayAFD[0], arrayAFD[1], arrayAFD[2], arrayAFD[3])
 
-        # return outAFD.printTransitionTable(False, True, arrayAllCar)
-        return outAFD.printTransitionTable()
+        return outAFD.printTransitionTable(False, True, arrayAllCar)
+        # return outAFD.printTransitionTable()
     #Funcion de Transcion dado el estado del cual se parte y el simbolo 
     def funcion_transicion(self,matrix, state_from, symbol):
         for column in matrix:
@@ -165,30 +166,24 @@ class AFD():
             #Fila de Estados
             #Estado Inicial es de aceptacion
             if state == self.ini_state and state in self.end_states:
-                # print(" ->*{:>3}   | ".format(state), end="")
                 stringAux = " ->*{:>3}   | ".format(state)
                 stringOut += stringAux
             elif state == self.ini_state:
-                # print(" -> {:>3}   | ".format(state), end="")
                 stringAux = " -> {:>3}   | ".format(state)
                 stringOut += stringAux
             elif state in self.end_states:
-                # print("  * {:>3}   | ".format(state), end="")
                 stringAux = "  * {:>3}   | ".format(state)
                 stringOut += stringAux
             else:
-                # print("    {:>3}   | ".format(state), end="")
                 stringAux = "    {:>3}   | ".format(state)
                 stringOut += stringAux
             for symbol in allSymbols:
                 car = self.funcion_transicion(matrixFinal,state,symbol)
-                # print('  {:>3}  |'.format(car),end="")
-                stringAux = "  {:>3}  |".format(state)
+                stringAux = "  {:>3}  |".format(car)
                 stringOut += stringAux
             #Imprimir Columna de Tokens
             for tupla in matrixFinal:
                 if tupla[0] == state:
-                    # print("|  ",tupla[3]," |")
                     car = "{}".format(tupla[3])
                     stringOut += "|   "+car+"  |\n"
                     break
@@ -357,58 +352,6 @@ class AFD():
     #Metodo que analiza una cadena dada de acuerdo con las transiciones del automata
     #Recibe la cadena a analizar
     #Retorna un arreglo con tokens
-    def analizeStr(self, string, convert=False):
-        #Buscamos los tokens de cada estado
-        arrayStatesTokens = []
-        for state in self.all_states:
-            for trans in self.transitions:
-                if state == trans[0]:
-                    arrayStatesTokens.append([state, trans[len(trans)-1]])
-                    break
-        arrayTokens = []
-        arrayLex = []
-        stringLex = ""
-        actualState = self.ini_state    #Inciamos con el estado final del automata
-        lastToken = -1
-        wrongString = False
-        cont = 0
-        while cont < len(string):
-            newState = self.transitionFuc(actualState, string[cont], convert)
-            if  newState != -1:
-                #Buscamos el token que corresponde con ese estado
-                for elem in arrayStatesTokens:
-                    if newState == elem[0]:
-                        lastToken = elem[1]
-                        stringLex = stringLex +string[cont]
-                        break
-                actualState = newState
-                #Ultimo Lexema Leido
-                if cont == len(string)-1:
-                    arrayTokens.append(lastToken)
-                    arrayTokens.append(lastToken)
-                    arrayLex.append(stringLex)  #Caputarmos el Lexema Leido
-            else:
-                if lastToken != -1:     #Ctrl -z
-                    actualState = self.ini_state
-                    cont = cont - 1
-                    arrayTokens.append(lastToken)
-                    # print(stringLex)
-                    arrayLex.append(stringLex)  #Caputarmos el Lexema Leido
-                    stringLex = ""  #Reiniciamos el auxiliar de lexema
-                    lastToken = -1
-                else:
-                    wrongString = True
-            cont = cont + 1
-            
-            if wrongString:
-                print("Hay un error en la cadena: '"+string+"' en la posicion [",cont,"]")
-                sys.exit()
-        #creamos el array de salida
-        arrayOut = []
-        for i in range(0,len(arrayLex)):
-            arrayOut.append([arrayTokens[i],arrayLex[i]])
-
-        return arrayOut
 
 #-------------------------------------------------------------------------
 #-------------------------------------------------------------------------
@@ -437,9 +380,7 @@ def main():
      # AFDTest = AFD.createAFDexpRegular(RegExpTest, 10)
     regExp = [RegExp1, RegExp2, RegExp3, RegExp4, RegExp5,RegExp6]
     AFDMain = AFD.createSuperAFD(regExp, [10,20, 30, 40, 50, 60])
-    stringAn = "SSSP965PTTTP74.96STTSLDLDSSLDDDTPPP179SSLDLLL"
-    TokenTest =AFDMain.analizeStr(stringAn)
-    print(TokenTest)
+
 
 # if __name__ == '__afd_main__':
 #     afd_main()  

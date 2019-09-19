@@ -70,18 +70,20 @@ class analizadorLex:
 
 
 def main():
-    RegExp1 = "(P|-)&(0-9)+"
-    RegExp2 = "(P|-)&(0-9)+&.&(0-9)+"
+    RegExp1 = "(\+|-)&(0-9)+"
+    RegExp2 = "(\+|-)&(0-9)+&.&(0-9)+"
     RegExp3 = "L&(L|D)*"
     RegExp4 = "(S|T)+"
-    RegExp5 = "(P)&(P)"
-    RegExp6 = "(P)"
+    RegExp5 = "(\+)&(\+)"
+    RegExp6 = "(\+)"
     arrayTokens = [10,20,30,40,50,60]
     regExp = [RegExp1, RegExp2, RegExp3, RegExp4, RegExp5,RegExp6]
     AFDMain = AFD.createSuperAFD(regExp, [10,20, 30, 40, 50, 60])
     
-    stringAn = "SSSP965PTTTP74.96STTSLDLDSSLDDDTPPP179SSLDLLL"
+    stringAn = "SSS+965+TTT+74.96STTSLDLDSSLDDDT+++179SSLDLLL"
     analizador = analizadorLex(AFDMain, stringAn)
+    print(analizador.AFD.printMinimizeTable(['+','-','0-9','.','L','D','T','S']))
+    print(analizador.AFD.printTransitionTable())
     analizador.analizeStr()
 
 
