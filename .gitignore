@@ -1,5 +1,5 @@
 /.mypy_cache
-/.vscode
+.vscode/
 /__pycache__
 lex.py
 settings.json

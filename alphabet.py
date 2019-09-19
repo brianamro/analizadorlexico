@@ -5,7 +5,7 @@ class Alphabet():
     range_num = 'num'   #0 - 9
     symbol_MINUS = '-'  #  -
     symbol_INTER = '?'  #  ?
-    symbol_PLUS = '!'   #  +    Cerradrua Positiva
+    symbol_PLUS = '+'   #  +    Cerradrua Positiva
     symbol_STAR = '*'   #  *    Cerradura de Kleene
     symbol_OR = '|'     #  |
     symbol_CONC = '&'   #  &

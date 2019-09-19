@@ -108,7 +108,8 @@ class AFD():
         
         outAFD = AFD(0, arrayAFD[0], arrayAFD[1], arrayAFD[2], arrayAFD[3])
 
-        return outAFD.printTransitionTable(False, True, arrayAllCar)
+        # return outAFD.printTransitionTable(False, True, arrayAllCar)
+        return outAFD.printTransitionTable()
     #Funcion de Transcion dado el estado del cual se parte y el simbolo 
     def funcion_transicion(self,matrix, state_from, symbol):
         for column in matrix:
@@ -391,6 +392,7 @@ class AFD():
                     actualState = self.ini_state
                     cont = cont - 1
                     arrayTokens.append(lastToken)
+                    # print(stringLex)
                     arrayLex.append(stringLex)  #Caputarmos el Lexema Leido
                     stringLex = ""  #Reiniciamos el auxiliar de lexema
                     lastToken = -1
@@ -423,28 +425,20 @@ def main():
     # RegExp3 = "(a|A)&(a|A|N)*"      #([a-z]|[A-Z])&([a-z]|[A-Z]|[0-9])*
     # RegExp4 = "P&P"                 #+&+
     # RegExp5 = "P"                   #+
-
-    # arrayRegExp = [RegExp1, RegExp2, RegExp3, RegExp4, RegExp5]
-    # arrayToken = [10,20,30,40,50]
-    # alphabet = ['P', 'M', 'N', 'D', 'a', 'A']
-
-    # mainAFD = AFD.createSuperAFD(arrayRegExp, arrayToken, alphabet)
-    # # mainAFD.printTransitionTable()
-    # tokens = mainAFD.analizeStr("15+10....1+a++9850+++aaaa")
-    # print(tokens)
-
-    # RegExpTest = "((m-o&b)+)|(c&d)|((0-2)*&(a-b))"
-    RegFloat1 = "(+|-)?&(0-9)!&.&(0-9)!"
-    RegFloat2 = "(+|-)?&(a-c)!&.&(0-9)!"
-    #RegExpTest = "((m-o&b)+)|(c&d)|((0-2)*&(a-b))"
-    RegFloat = "(+|-)?&(0-3)!&.&(0-3)!"
-    RegExpTest = "((m-o&b)+)|(c&d)|((0-2)*&(a-b))"
-    RegFloat = "(+|-)?&(0-5)!&.&(0-3)!"
-    # AFDTest = AFD.createAFDexpRegular(RegExpTest, 10)
-    AFDFloat = AFD.createSuperAFD([RegFloat1, RegFloat2], [10,20])
-    # print(AFDFloat.printTransitionTable())
-    # print(AFDFloat.printMinimizeTable(['+','-','0-9','a-c','.']))
-    TokenTest =AFDFloat.analizeStr("-5432132.2-12501232789.122+aacba.3212")
+    
+    RegExp1 = "(P|-)&(0-9)+"
+    RegExp2 = "(P|-)&(0-9)+&.&(0-9)+"
+    RegExp3 = "L&(L|D)*"
+    RegExp4 = "(S|T)+"
+    RegExp5 = "(P)&(P)"
+    RegExp6 = "(P)"
+    # arayRegEx = [RegFloat1, RegFloat2]
+    arrayTokens = [10,20,30,40,50,60]
+     # AFDTest = AFD.createAFDexpRegular(RegExpTest, 10)
+    regExp = [RegExp1, RegExp2, RegExp3, RegExp4, RegExp5,RegExp6]
+    AFDMain = AFD.createSuperAFD(regExp, [10,20, 30, 40, 50, 60])
+    stringAn = "SSSP965PTTTP74.96STTSLDLDSSLDDDTPPP179SSLDLLL"
+    TokenTest =AFDMain.analizeStr(stringAn)
     print(TokenTest)
 
 # if __name__ == '__afd_main__':
