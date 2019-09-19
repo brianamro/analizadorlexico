@@ -1,3 +1,5 @@
+import sys
+
 from AFD import AFD
 from alphabet import Alphabet
 from regEx import RegularExp
@@ -13,7 +15,7 @@ class analizadorLex:
     # y el lexema que corresponde a dicha clase lexica
     def yylex(self):    #Retorna el token y el lexema encontrado
         returnToken = []
-        lastToken = 0
+        lastToken = -1
         #Buscamos los tokens de cada estado
         arrayStatesTokens = []
         for state in self.AFD.all_states:
@@ -83,7 +85,7 @@ def main():
     stringAn = "SSS+965+TTT+74.96STTSLDLDSSLDDDT+++179SSLDLLL"
     analizador = analizadorLex(AFDMain, stringAn)
     print(analizador.AFD.printMinimizeTable(['+','-','0-9','.','L','D','T','S']))
-    print(analizador.AFD.printTransitionTable())
+    # print(analizador.AFD.printTransitionTable())
     analizador.analizeStr()
 
 

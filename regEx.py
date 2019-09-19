@@ -51,6 +51,7 @@ class RegularExp():
                     if (self.stringAn[self.apCarActual] == Alphabet.symbol_PLUS) or (self.stringAn[self.apCarActual] == Alphabet.symbol_STAR) or (self.stringAn[self.apCarActual] == Alphabet.symbol_OR) or (self.stringAn[self.apCarActual] == Alphabet.symbol_CONC) or (self.stringAn[self.apCarActual] == Alphabet.symbol_PARI) or (self.stringAn[self.apCarActual] == Alphabet.symbol_PARD) or (self.stringAn[self.apCarActual] == Alphabet.symbol_INTER):
                         rangeString = car+self.stringAn[self.apCarActual]
                         self.rangeAux.append(rangeString)    
+                        self.apCarActual = self.apCarActual + 1
                         return Token.symbol_RANGE
                 else:   #Caracter
                     return Token.symbol_ALL
